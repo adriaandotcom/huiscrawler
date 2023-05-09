@@ -1,0 +1,17 @@
+version: "3.9"
+
+services:
+  huiscrawler:
+    container_name: huiscrawler
+    image: ghcr.io/adriaanvanrossum/huiscrawler:latest
+    platform: linux/amd64
+    restart: unless-stopped
+    environment:
+      - NODE_ENV=production
+      - DATA_DIR=/data
+      - TZ=Europe/Amsterdam
+    volumes:
+      - huiscrawler-db:/data
+
+volumes:
+  huiscrawler-db:

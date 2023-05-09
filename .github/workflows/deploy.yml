@@ -1,0 +1,65 @@
+name: Build & Deploy crawler
+
+concurrency:
+  group: production
+  cancel-in-progress: true
+
+on:
+  push:
+    branches:
+      - "main"
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check Out Repo
+        uses: actions/checkout@v3
+        with:
+          persist-credentials: false
+
+      - name: Set up Docker Buildx
+        id: buildx
+        uses: docker/setup-buildx-action@v2
+
+      - name: Login to Container Registry
+        uses: docker/login-action@v2
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push
+        id: docker_build
+        uses: docker/build-push-action@v4
+        with:
+          context: ./
+          file: ./Dockerfile
+          push: ${{ github.ref == 'refs/heads/main' }}
+          tags: ghcr.io/adriaanvanrossum/huiscrawler:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          build-args: |
+            "BUILD_REV=${{ github.sha }}"
+          secrets: |
+            "github_pat=${{ secrets.HUISCRAWLER_DEPLOY_PERSONAL_ACCESS_TOKEN }}"
+
+  deploy:
+    runs-on: ubuntu-latest
+    needs: [build]
+    if: github.ref == 'refs/heads/main'
+
+    steps:
+      - name: Deploy
+        env:
+          DEPLOY_SSH_KEY: "${{ secrets.DEPLOY_SSH_KEY }}"
+          # If server changes keys, update this variable with "ssh-keyscan server.adriaan.company | grep ed25519"
+          # Saving the server public key protects against MITM attacks.
+          KNOWN_HOSTS: "server.adriaan.company ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAICff9uso6v7+pgiy8JUqdrvWVjElLTcFHGn0IiDTWCGp"
+        run: |
+          mkdir -p ~/.ssh
+          echo "$KNOWN_HOSTS" >> ~/.ssh/known_hosts
+          echo "$DEPLOY_SSH_KEY" > /tmp/ssh_key
+          chmod 600 /tmp/ssh_key
+          ssh -i /tmp/ssh_key -T user@server.adriaan.company

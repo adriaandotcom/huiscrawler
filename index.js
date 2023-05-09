@@ -10,8 +10,11 @@ const cookieJar = new CookieJar();
 const userAgent =
   "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36";
 
+const dataDir = process.env.DATA_DIR || path.join(__dirname, "data");
+const database = path.join(dataDir, "properties.db");
+
 // Initialize database
-let db = new sqlite3.Database("./properties.db", (err) => {
+let db = new sqlite3.Database(database, (err) => {
   if (err) console.error(err.message);
 });
 
@@ -179,3 +182,11 @@ async function main() {
 }
 
 main().catch(console.error);
+
+setInterval(() => {
+  main().catch(console.error);
+}, 30 * 60 * 1000); // 30 minutes in milliseconds
+
+setInterval(() => {
+  console.log("Running " + new Date());
+}, 5 * 1000);
