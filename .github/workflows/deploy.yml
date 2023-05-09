@@ -56,7 +56,7 @@ jobs:
           DEPLOY_SSH_KEY: "${{ secrets.DEPLOY_SSH_KEY }}"
           # If server changes keys, update this variable with "ssh-keyscan server.adriaan.company | grep ed25519"
           # Saving the server public key protects against MITM attacks.
-          KNOWN_HOSTS: "server.adriaan.company ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAICff9uso6v7+pgiy8JUqdrvWVjElLTcFHGn0IiDTWCGp"
+          KNOWN_HOSTS: "server.adriaan.company ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIFHooiVfZDGg5ubm2UIUyFbvHpKukl11bp1ueKSUnQep"
         run: |
           mkdir -p ~/.ssh
           echo "$KNOWN_HOSTS" >> ~/.ssh/known_hosts
