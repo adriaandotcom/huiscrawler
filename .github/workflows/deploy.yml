@@ -65,4 +65,4 @@ jobs:
           echo "$KNOWN_HOSTS" >> ~/.ssh/known_hosts
           echo "$DEPLOY_SSH_KEY" > /tmp/ssh_key
           chmod 600 /tmp/ssh_key
-          ssh -i /tmp/ssh_key -T user@server.adriaan.company
+          ssh -i /tmp/ssh_key -T adriaan@server.adriaan.company
