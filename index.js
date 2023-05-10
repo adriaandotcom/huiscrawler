@@ -2,7 +2,8 @@ const fetch = require("node-fetch");
 const cheerio = require("cheerio");
 const { CookieJar } = require("tough-cookie");
 const sqlite3 = require("sqlite3").verbose();
-const { zipcodes } = require("./constants");
+const { zipcodes } = require("./lib/constants");
+const { parseProperties } = require("./lib/chatgpt");
 const fs = require("fs");
 const path = require("path");
 
@@ -25,19 +26,26 @@ const initDatabase = async () => {
     // Create table
     db.run(
       `CREATE TABLE IF NOT EXISTS properties(
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    platform TEXT,
-    url TEXT UNIQUE,
-    image TEXT,
-    floor TEXT,
-    street TEXT,
-    zipcode TEXT,
-    meters INTEGER,
-    price INTEGER
-  )`,
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        platform TEXT,
+        url TEXT UNIQUE,
+        image TEXT,
+        floor TEXT,
+        street TEXT,
+        zipcode TEXT,
+        meters INTEGER,
+        price INTEGER,
+        garden TEXT,
+        rooftarrace TEXT,
+        year INTEGER,
+        rooms INTEGER,
+        servicecosts INTEGER,
+        rating INTEGER,
+        reason TEXT
+      )`,
       (error) => {
         if (error) reject(error);
-        else resolve(db);
+        else resolve();
       }
     );
 
@@ -54,11 +62,13 @@ async function getRow(database, sql, params) {
   });
 }
 
-async function sendTelegramAlert(text, image) {
+async function sendTelegramAlert(text, image, options = {}) {
   if (!TELEGRAM_TOKEN)
     return console.log(`No TELEGRAM_TOKEN provided to send: ${text}`);
 
   const telegramApiUrl = `https://api.telegram.org/bot${TELEGRAM_TOKEN}`;
+
+  const disable_notification = options.silent || false;
 
   let response;
 
@@ -74,6 +84,7 @@ async function sendTelegramAlert(text, image) {
         photo: image,
         caption: text,
         parse_mode: "Markdown",
+        disable_notification,
       }),
     });
   } else {
@@ -87,6 +98,7 @@ async function sendTelegramAlert(text, image) {
         chat_id: TELEGRAM_CHAT_ID,
         text: text,
         parse_mode: "Markdown",
+        disable_notification,
       }),
     });
   }
@@ -121,8 +133,8 @@ function emoji(likebility) {
   if (!likebility) return "";
 
   const emojis = {
-    1: "😡",
-    2: "🤬",
+    1: "🤬",
+    2: "😡",
     3: "😠",
     4: "😞",
     5: "😐",
@@ -160,6 +172,21 @@ async function processResult(db, result, config) {
       }
     }
 
+    // Get apendix of property.street, like --3 should return 3, -H should return H, etc.
+    const appendix = property.street.match(/[0-9]+[- ]+([1-9]|h|hs|i+)$/i)?.[1];
+    const floor =
+      property.floor === "begane grond"
+        ? 0
+        : /^[0-9]+$/.test(property.floor)
+        ? parseInt(property.floor)
+        : /^[0-9]+$/.test(appendix)
+        ? parseInt(appendix)
+        : appendix === "h" || appendix === "hs"
+        ? 0
+        : /^i+$/i.test(appendix)
+        ? appendix.length
+        : null;
+
     // Check if the zipcode is in your list
     const zipcodeObj = zipcodes.find(
       (z) => z.code === parseInt(property.zipcode)
@@ -170,27 +197,36 @@ async function processResult(db, result, config) {
     if (alert) {
       const k = property.price ? `€${Math.round(property.price / 1000)}k` : "";
       const m = property.meters ? `${property.meters}m2` : "";
+
+      const pricePerMeter =
+        property.price && property.meters
+          ? `€${Math.round(property.price / property.meters)}/m2`
+          : null;
       const line = [
         emoji(zipcodeObj?.likebility),
         `${zipcodeObj?.likebility}/10`,
         k,
         m,
+        pricePerMeter,
         property.street,
-        property.floor,
+        floor,
       ]
         .filter(Boolean)
         .join(" ");
       const lines = [line, `[${property.url}](${property.url})`];
 
       // Send alert to Telegram
-      await sendTelegramAlert(lines.join("\n"), property.image);
+      const disable_notification = zipcodeObj?.likebility <= 5;
+      await sendTelegramAlert(lines.join("\n"), property.image, {
+        disable_notification,
+      });
     }
 
     stmt.run(
       config.platform,
       property.url,
       property.image,
-      property.floor,
+      floor,
       property.street,
       property.zipcode,
       property.meters || null,

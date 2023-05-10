@@ -1,4 +1,4 @@
-const { getZipCode } = require("../tools");
+const { getZipCode } = require("../lib/tools");
 
 module.exports = {
   platform: "de-alliantie",

@@ -14,7 +14,4 @@ services:
       TELEGRAM_CHAT_ID: "${TELEGRAM_CHAT_ID}"
       GOOGLE_MAPS_API_KEY: "${GOOGLE_MAPS_API_KEY}"
     volumes:
-      - huiscrawler-db:/data
-
-volumes:
-  huiscrawler-db:
+      - /home/adriaan/huiscrawler:/data
