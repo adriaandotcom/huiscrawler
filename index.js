@@ -44,14 +44,10 @@ async function getRow(sql, params) {
 }
 
 async function sendTelegramAlert(text, image) {
-  const telegramApiUrl = `https://api.telegram.org/bot${TELEGRAM_TOKEN}`;
+  if (!TELEGRAM_TOKEN)
+    return console.log(`No TELEGRAM_TOKEN provided to send: ${text}`);
 
-  console.log({
-    dataDir,
-    telegramApiUrl,
-    TELEGRAM_TOKEN,
-    TELEGRAM_CHAT_ID,
-  });
+  const telegramApiUrl = `https://api.telegram.org/bot${TELEGRAM_TOKEN}`;
 
   let response;
 
@@ -85,7 +81,7 @@ async function sendTelegramAlert(text, image) {
   }
 
   const json = await response.json();
-  if (!json.ok) console.error("Telegram error: ", json);
+  if (!json.ok) console.error("Telegram error:", json);
 }
 
 async function fetchWithCookies(url, options) {
