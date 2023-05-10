@@ -199,9 +199,10 @@ async function processResult(db, result, config) {
     let ai;
 
     try {
-      ai = config.getAIProperties // && alert
-        ? await config.getAIProperties(fetchWithCookies, property)
-        : null;
+      ai =
+        config.getAIProperties && alert
+          ? await config.getAIProperties(fetchWithCookies, property)
+          : null;
     } catch (error) {
       console.error(error);
     }
