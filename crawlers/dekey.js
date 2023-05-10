@@ -1,3 +1,6 @@
+const cheerio = require("cheerio");
+const { parseProperties } = require("../lib/chatgpt");
+
 module.exports = {
   baseUrl: "https://www.vindjeplekbijdekey.nl",
   targetUrl:
@@ -38,5 +41,23 @@ module.exports = {
       });
     });
     return result;
+  },
+
+  getAIProperties: async function (fetchWithCookies, result) {
+    const page = await fetchWithCookies(result.url);
+    const html = await page.text();
+    const $ = cheerio.load(html);
+
+    const contents = [
+      $("#overview")?.text()?.trim(),
+      $(".contentsmall")?.text()?.trim(),
+      $("aside#features")?.text()?.trim(),
+    ];
+
+    if (contents.length === 0) return null;
+
+    const properties = await parseProperties(contents.join(" \n "));
+
+    return properties;
   },
 };

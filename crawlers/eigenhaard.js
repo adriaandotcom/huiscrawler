@@ -1,3 +1,5 @@
+const cheerio = require("cheerio");
+const { parseProperties } = require("../lib/chatgpt");
 const { getZipCode } = require("../lib/tools");
 
 module.exports = {
@@ -57,5 +59,19 @@ module.exports = {
     result.zipcode = zip;
 
     return result;
+  },
+
+  getAIProperties: async function (fetchWithCookies, result) {
+    const page = await fetchWithCookies(result.url);
+    const html = await page.text();
+    const $ = cheerio.load(html);
+
+    const contents = [$("#content .container")?.text()?.trim()].filter(Boolean);
+
+    if (contents.length === 0) return null;
+
+    const properties = await parseProperties(contents.join(" \n "));
+
+    return properties;
   },
 };

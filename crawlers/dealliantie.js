@@ -1,7 +1,9 @@
+const cheerio = require("cheerio");
 const { getZipCode } = require("../lib/tools");
+const { parseProperties } = require("../lib/chatgpt");
 
 module.exports = {
-  platform: "de-alliantie",
+  platform: "dealliantie",
   baseUrl: "https://ik-zoek.de-alliantie.nl/kopen/",
   targetUrl: "https://ik-zoek.de-alliantie.nl/getproperties",
   postData:
@@ -42,5 +44,28 @@ module.exports = {
     result.zipcode = zip;
 
     return result;
+  },
+
+  getAIProperties: async function (fetchWithCookies, result) {
+    const page = await fetchWithCookies(result.url);
+    const html = await page.text();
+    const $ = cheerio.load(html);
+
+    let contents = [
+      $(".property-summary")?.text()?.trim(),
+      $(".property-tabs__body")?.text()?.trim(),
+    ];
+
+    $(".table.table--features")?.each((i, el) => {
+      contents.push($(el)?.text()?.trim());
+    });
+
+    contents = contents.filter((c) => c);
+
+    if (contents.length === 0) return null;
+
+    const properties = await parseProperties(contents.join(" \n "));
+
+    return properties;
   },
 };

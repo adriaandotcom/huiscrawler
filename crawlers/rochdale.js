@@ -1,3 +1,5 @@
+const { parseProperties } = require("../lib/chatgpt");
+
 module.exports = {
   platform: "rochdale",
   baseUrl: null,
@@ -32,5 +34,21 @@ module.exports = {
     const json = await response.json();
     result.zipcode = json.postalCode;
     return result;
+  },
+
+  getAIProperties: async function (fetchWithCookies, result) {
+    const url = `https://www.rochdale.nl/unitdetails?path-segment=${result._raw.unit_path_segment}`;
+    const page = await fetchWithCookies(url);
+    const json = await page.json();
+    delete json.images;
+
+    for (const key in json) {
+      if (json[key] === "" || json[key] === null) {
+        delete json[key];
+      }
+    }
+
+    const properties = await parseProperties(JSON.stringify(json));
+    return properties;
   },
 };

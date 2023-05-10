@@ -3,7 +3,6 @@ const cheerio = require("cheerio");
 const { CookieJar } = require("tough-cookie");
 const sqlite3 = require("sqlite3").verbose();
 const { zipcodes } = require("./lib/constants");
-const { parseProperties } = require("./lib/chatgpt");
 const fs = require("fs");
 const path = require("path");
 
@@ -151,7 +150,10 @@ function emoji(likebility) {
 async function processResult(db, result, config) {
   // Insert results into database
   const stmt = db.prepare(
-    "INSERT OR IGNORE INTO properties(platform, url, image, floor, street, zipcode, meters, price) VALUES(?, ?, ?, ?, ?, ?, ?, ?)"
+    `INSERT OR IGNORE INTO properties
+    (platform, url, image, floor, street, zipcode, meters, price, garden, rooftarrace, year, rooms, servicecosts, rating, reason)
+    VALUES
+    (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
   );
 
   for (let property of result) {
@@ -194,32 +196,63 @@ async function processResult(db, result, config) {
 
     const alert = zipcodeObj && (!property.meters || property.meters >= 59);
 
-    if (alert) {
-      const k = property.price ? `€${Math.round(property.price / 1000)}k` : "";
-      const m = property.meters ? `${property.meters}m2` : "";
+    let ai;
 
+    try {
+      ai = config.getAIProperties // && alert
+        ? await config.getAIProperties(fetchWithCookies, property)
+        : null;
+    } catch (error) {
+      console.error(error);
+    }
+
+    if (alert) {
       const pricePerMeter =
         property.price && property.meters
           ? `€${Math.round(property.price / property.meters)}/m2`
           : null;
+
+      const floorScore =
+        floor === 0 && ai?.garden
+          ? 10
+          : ai?.rooftarrace
+          ? 8
+          : floor === 0 || ai?.garden
+          ? 5
+          : 0;
+
+      const emojiScore = Math.round(
+        (zipcodeObj?.likebility + floorScore + (ai?.rating || 10) / 10) / 3
+      );
+
       const line = [
-        emoji(zipcodeObj?.likebility),
-        `${zipcodeObj?.likebility}/10`,
-        k,
-        m,
+        emojiScore ? `${emoji(emojiScore)} ${emojiScore}/10` : null,
+        `📍${zipcodeObj?.likebility}/10`,
+        property.price ? `€${Math.round(property.price / 1000)}k` : "",
+        property.meters ? `${property.meters}m2` : "",
         pricePerMeter,
         property.street,
-        floor,
+        floor ? `🛗 ${floor}` : null,
+        ai.rooms ? `🛏 ${ai.rooms}` : null,
+        ai.servicecosts ? `🧾 €${ai.servicecosts} p/m` : null,
       ]
         .filter(Boolean)
-        .join(" ");
-      const lines = [line, `[${property.url}](${property.url})`];
+        .join(" · ");
+
+      const lines = [
+        emoji(emojiScore) >= 7 ? `🚨🚨🚨 Might be a good property!` : "",
+        line,
+        `[${property.url}](${property.url})`,
+        ai?.reason ? `_AI rating ${ai.rating || 0}/100. ${ai.reason}_` : null,
+      ];
 
       // Send alert to Telegram
       const disable_notification = zipcodeObj?.likebility <= 5;
-      await sendTelegramAlert(lines.join("\n"), property.image, {
-        disable_notification,
-      });
+      await sendTelegramAlert(
+        lines.filter(Boolean).join("\n"),
+        property.image,
+        { disable_notification }
+      );
     }
 
     stmt.run(
@@ -229,8 +262,15 @@ async function processResult(db, result, config) {
       floor,
       property.street,
       property.zipcode,
-      property.meters || null,
-      property.price || null,
+      property.meters || ai?.size || null,
+      property.price || ai?.price || null,
+      ai?.garden || null,
+      ai?.rooftarrace || null,
+      ai?.year || null,
+      ai?.rooms || null,
+      ai?.servicecosts || null,
+      ai?.rating || null,
+      ai?.reason || null,
       function (err) {
         if (err) return console.log(err.message);
       }

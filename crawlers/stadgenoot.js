@@ -1,3 +1,6 @@
+const cheerio = require("cheerio");
+const { parseProperties } = require("../lib/chatgpt");
+
 module.exports = {
   platform: "stadgenoot",
   baseUrl: "https://aanbod.stadgenoot.nl/woningen/koopaanbod/",
@@ -26,5 +29,23 @@ module.exports = {
     }
 
     return result;
+  },
+
+  getAIProperties: async function (fetchWithCookies, result) {
+    const page = await fetchWithCookies(result.url);
+    const html = await page.text();
+    const $ = cheerio.load(html);
+
+    const contents = [
+      $("#omschrijving")?.text()?.trim(),
+      $("#kenmerken")?.text()?.trim(),
+      $(".eenheid")?.text()?.trim(),
+    ].filter(Boolean);
+
+    if (contents.length === 0) return null;
+
+    const properties = await parseProperties(contents.join(" \n "));
+
+    return properties;
   },
 };
