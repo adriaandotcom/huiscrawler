@@ -16,12 +16,15 @@ const database = path.join(dataDir, "properties.db");
 const { FILTER_PLATFORM, TELEGRAM_TOKEN, TELEGRAM_CHAT_ID } = process.env;
 
 // Initialize database
-let db = new sqlite3.Database(database, (err) => {
-  if (err) console.error(err.message);
-});
+const initDatabase = async () => {
+  return new Promise((resolve, reject) => {
+    const db = new sqlite3.Database(database, (error) => {
+      if (error) reject(error);
+    });
 
-// Create table
-db.run(`CREATE TABLE IF NOT EXISTS properties(
+    // Create table
+    db.run(
+      `CREATE TABLE IF NOT EXISTS properties(
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     platform TEXT,
     url TEXT UNIQUE,
@@ -31,12 +34,20 @@ db.run(`CREATE TABLE IF NOT EXISTS properties(
     zipcode TEXT,
     meters INTEGER,
     price INTEGER
-)`);
+  )`,
+      (error) => {
+        if (error) reject(error);
+        else resolve(db);
+      }
+    );
 
-// get row async
-async function getRow(sql, params) {
+    db.close();
+  });
+};
+
+async function getRow(database, sql, params) {
   return new Promise((resolve, reject) => {
-    db.get(sql, params, (err, row) => {
+    database.get(sql, params, (err, row) => {
       if (err) reject(err);
       else resolve(row);
     });
@@ -125,7 +136,7 @@ function emoji(likebility) {
   return emojis[likebility];
 }
 
-async function processResult(result, config) {
+async function processResult(db, result, config) {
   // Insert results into database
   const stmt = db.prepare(
     "INSERT OR IGNORE INTO properties(platform, url, image, floor, street, zipcode, meters, price) VALUES(?, ?, ?, ?, ?, ?, ?, ?)"
@@ -134,7 +145,7 @@ async function processResult(result, config) {
   for (let property of result) {
     // Check if property.url is in database
 
-    const row = await getRow(`SELECT * FROM properties WHERE url = ?`, [
+    const row = await getRow(db, `SELECT * FROM properties WHERE url = ?`, [
       property.url,
     ]);
 
@@ -196,6 +207,10 @@ async function processResult(result, config) {
 async function main() {
   console.log(`${new Date().toISOString().slice(0, 16)} Starting crawler...`);
 
+  const db = new sqlite3.Database(database, (error) => {
+    if (error) console.error(error);
+  });
+
   // Get all config files
   const crawlerDir = path.join(__dirname, "crawlers");
   const files = fs.readdirSync(crawlerDir);
@@ -253,14 +268,20 @@ async function main() {
     }
 
     // Insert into database
-    await processResult(result, config);
+    await processResult(db, result, config);
   }
 
   db.close();
 }
 
-main().catch(console.error);
+(async () => {
+  // open the database
+  await initDatabase();
 
-setInterval(() => {
+  // run the main function
   main().catch(console.error);
-}, 30 * 60 * 1000); // 30 minutes in milliseconds
+
+  setInterval(() => {
+    main().catch(console.error);
+  }, 30 * 60 * 1000); // 30 minutes in milliseconds
+})();
