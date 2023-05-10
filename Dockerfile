@@ -7,7 +7,8 @@ WORKDIR /usr/src/app
 COPY package*.json ./
 
 # Install the application dependencies
-RUN npm install
+ENV NPM_CONFIG_LOGLEVEL warn
+RUN npm install --production
 
 # Bundle the app source inside the Docker image
 COPY . .
