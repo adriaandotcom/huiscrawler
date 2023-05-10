@@ -161,7 +161,7 @@ async function processResult(result, config) {
       ]
         .filter(Boolean)
         .join(" ");
-      const lines = [line, `[${property.url}](${property.url})]`];
+      const lines = [line, `[${property.url}](${property.url})`];
 
       // Send alert to Telegram
       await sendTelegramAlert(lines.join("\n"), property.image);
@@ -252,6 +252,9 @@ async function main() {
 }
 
 main().catch(console.error);
+
+// Send startup message to telegram
+sendTelegramAlert("Crawler started").catch(console.error);
 
 setInterval(() => {
   main().catch(console.error);
