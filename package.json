@@ -5,7 +5,6 @@
   "main": "index.js",
   "scripts": {
     "dev": "node -r dotenv/config index.js",
-    "start": "pm2 start index.js --name huiscrawler",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],

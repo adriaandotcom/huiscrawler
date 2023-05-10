@@ -17,4 +17,4 @@ COPY . .
 # EXPOSE 3000
 
 # Define the command to run the app
-CMD [ "npm", "start" ]
+CMD [ "pm2-runtime", "index.js" ]
