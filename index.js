@@ -207,23 +207,25 @@ async function main() {
     // Fetch initial page to get PHPSESSID cookie
     if (config.baseUrl) await fetchWithCookies(config.baseUrl);
 
-    const token = cookieJar
-      .getCookiesSync(config.baseUrl)
-      .find((c) => c.key === "__RequestVerificationToken")?.value;
+    let options = {};
 
-    const options = config.postData
-      ? {
-          method: "POST",
-          body: config.postData.replace(
-            /\{\{__RequestVerificationToken\}\}/,
-            token || ""
-          ),
-          headers: {
-            "Content-Type": "application/x-www-form-urlencoded",
-            "X-Requested-With": "XMLHttpRequest",
-          },
-        }
-      : {};
+    if (config.postData) {
+      const token = cookieJar
+        ?.getCookiesSync(config.baseUrl)
+        ?.find((c) => c.key === "__RequestVerificationToken")?.value;
+
+      options = {
+        method: "POST",
+        body: config.postData.replace(
+          /\{\{__RequestVerificationToken\}\}/,
+          token || ""
+        ),
+        headers: {
+          "Content-Type": "application/x-www-form-urlencoded",
+          "X-Requested-With": "XMLHttpRequest",
+        },
+      };
+    }
 
     const response = await fetchWithCookies(config.targetUrl, options);
 

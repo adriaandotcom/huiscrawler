@@ -2,7 +2,7 @@ const { getZipCode } = require("../tools");
 
 module.exports = {
   platform: "de-alliantie",
-  baseUrl: "https://ik-zoek.de-alliantie.nl/kopen/?page=1",
+  baseUrl: "https://ik-zoek.de-alliantie.nl/kopen/",
   targetUrl: "https://ik-zoek.de-alliantie.nl/getproperties",
   postData:
     "__RequestVerificationToken={{__RequestVerificationToken}}&type=kopen&city=&maxprice=0&minrooms=0&street=&minsurface=0&maxsurface=0&page=1&sorting=date&order=desc",
