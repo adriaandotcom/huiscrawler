@@ -13,7 +13,7 @@ const userAgent =
 const dataDir = process.env.DATA_DIR || path.join(__dirname, "data");
 const database = path.join(dataDir, "properties.db");
 
-const { TELEGRAM_TOKEN, TELEGRAM_CHAT_ID } = process.env;
+const { FILTER_PLATFORM, TELEGRAM_TOKEN, TELEGRAM_CHAT_ID } = process.env;
 
 // Initialize database
 let db = new sqlite3.Database(database, (err) => {
@@ -198,8 +198,8 @@ async function main() {
   for (const configFile of configFiles) {
     const config = require(path.join(crawlerDir, configFile));
 
-    // Skip dekey crawler
-    // if (config.platform !== "ymere") continue;
+    // Skip other than FILTER_PLATFORM crawlers
+    if (FILTER_PLATFORM && config.platform !== FILTER_PLATFORM) continue;
 
     if (!config.parseHTML && !config.parseJSON)
       throw new Error(
