@@ -47,9 +47,11 @@ async function sendTelegramAlert(text, image) {
   console.log("Sending Telegram alert: ", text);
   const telegramApiUrl = `https://api.telegram.org/bot${TELEGRAM_TOKEN}`;
 
+  let response;
+
   // If the image URL is accessible via a public URL, you can send it with sendPhoto method
   if (image?.startsWith("http://") || image?.startsWith("https://")) {
-    await fetch(`${telegramApiUrl}/sendPhoto`, {
+    response = await fetch(`${telegramApiUrl}/sendPhoto`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -63,7 +65,7 @@ async function sendTelegramAlert(text, image) {
     });
   } else {
     // If no image or image not accessible via a public URL, send a text message
-    await fetch(`${telegramApiUrl}/sendMessage`, {
+    response = await fetch(`${telegramApiUrl}/sendMessage`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -75,6 +77,9 @@ async function sendTelegramAlert(text, image) {
       }),
     });
   }
+
+  const json = await response.json();
+  console.log("Telegram response: ", json);
 }
 
 async function fetchWithCookies(url, options) {
