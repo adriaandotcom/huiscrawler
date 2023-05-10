@@ -261,9 +261,6 @@ async function main() {
 
 main().catch(console.error);
 
-// Send startup message to telegram
-sendTelegramAlert("Crawler started").catch(console.error);
-
 setInterval(() => {
   main().catch(console.error);
 }, 30 * 60 * 1000); // 30 minutes in milliseconds
