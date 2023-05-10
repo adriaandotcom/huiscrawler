@@ -207,10 +207,17 @@ async function main() {
     // Fetch initial page to get PHPSESSID cookie
     if (config.baseUrl) await fetchWithCookies(config.baseUrl);
 
+    const token = cookieJar
+      .getCookiesSync(config.baseUrl)
+      .find((c) => c.key === "__RequestVerificationToken")?.value;
+
     const options = config.postData
       ? {
           method: "POST",
-          body: config.postData,
+          body: config.postData.replace(
+            /\{\{__RequestVerificationToken\}\}/,
+            token || ""
+          ),
           headers: {
             "Content-Type": "application/x-www-form-urlencoded",
             "X-Requested-With": "XMLHttpRequest",
