@@ -18,7 +18,7 @@ Next copy contents of `ci_key.pub` and edit `~/.ssh/authorized_keys` on the serv
 
 ```
 # GitHub Action user. Restrict and command options are used to sucurely limit permissions!
-restrict,command="/home/user/huiscrawler/deploy" <contents of ci_key.pub>
+restrict,command="/home/adriaan/huiscrawler/deploy" <contents of ci_key.pub>
 ```
 
 Make sure to run `sudo systemctl restart sshd` to reload the authorized_keys file.
@@ -26,14 +26,14 @@ Make sure to run `sudo systemctl restart sshd` to reload the authorized_keys fil
 Finally, prepare initial deploy config:
 
 ```bash
-ssh user@server.adriaan.company mkdir -p /home/user/huiscrawler
-scp .env.production user@server.adriaan.company:huiscrawler/.env
-scp docker-compose.yml user@server.adriaan.company:huiscrawler/docker-compose.yml
-scp deploy user@server.adriaan.company:huiscrawler/deploy
+ssh adriaan@server.adriaan.company mkdir -p /home/adriaan/huiscrawler
+scp .env.production adriaan@server.adriaan.company:huiscrawler/.env
+scp docker-compose.yml adriaan@server.adriaan.company:huiscrawler/docker-compose.yml
+scp deploy adriaan@server.adriaan.company:huiscrawler/deploy
 
 # Create a personal access token with read access to container images
 # Username is USERNAME, do not edit
-ssh user@server.adriaan.company
+ssh adriaan@server.adriaan.company
 docker login ghcr.io -u USERNAME
 ```
 
@@ -44,7 +44,7 @@ After that you can deploy normally from ci.
 After changing config in `.env.production` or `docker-compose.yml` copy the file to the server with:
 
 ```bash
-scp .env.production user@server.adriaan.company:huiscrawler/.env
+scp .env.production adriaan@server.adriaan.company:huiscrawler/.env
 ```
 
 Then do a regular deploy or run `docker-compose up -d` on the server.

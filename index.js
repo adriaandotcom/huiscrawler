@@ -13,6 +13,8 @@ const userAgent =
 const dataDir = process.env.DATA_DIR || path.join(__dirname, "data");
 const database = path.join(dataDir, "properties.db");
 
+const { TELEGRAM_TOKEN, TELEGRAM_CHAT_ID } = process.env;
+
 // Initialize database
 let db = new sqlite3.Database(database, (err) => {
   if (err) console.error(err.message);
@@ -41,6 +43,39 @@ async function getRow(sql, params) {
   });
 }
 
+async function sendTelegramAlert(text, image) {
+  const telegramApiUrl = `https://api.telegram.org/bot${TELEGRAM_TOKEN}`;
+
+  // If the image URL is accessible via a public URL, you can send it with sendPhoto method
+  if (image?.startsWith("http://") || image?.startsWith("https://")) {
+    await fetch(`${telegramApiUrl}/sendPhoto`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        chat_id: TELEGRAM_CHAT_ID,
+        photo: image,
+        caption: text,
+        parse_mode: "Markdown",
+      }),
+    });
+  } else {
+    // If no image or image not accessible via a public URL, send a text message
+    await fetch(`${telegramApiUrl}/sendMessage`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        chat_id: TELEGRAM_CHAT_ID,
+        text: text,
+        parse_mode: "Markdown",
+      }),
+    });
+  }
+}
+
 async function fetchWithCookies(url, options) {
   options = options || {};
   options.headers = options.headers || {};
@@ -61,6 +96,25 @@ async function fetchWithCookies(url, options) {
   }
 
   return response;
+}
+
+function emoji(likebility) {
+  if (!likebility) return "";
+
+  const emojis = {
+    1: "😡",
+    2: "🤬",
+    3: "😠",
+    4: "😞",
+    5: "😐",
+    6: "🙂",
+    7: "😊",
+    8: "😃",
+    9: "😍",
+    10: "🥰",
+  };
+
+  return emojis[likebility];
 }
 
 async function processResult(result, config) {
@@ -100,6 +154,7 @@ async function processResult(result, config) {
       const k = property.price ? `€${Math.round(property.price / 1000)}k` : "";
       const m = property.meters ? `${property.meters}m2` : "";
       const line = [
+        emoji(zipcodeObj?.likebility),
         `${zipcodeObj?.likebility}/10`,
         k,
         m,
@@ -108,8 +163,10 @@ async function processResult(result, config) {
       ]
         .filter(Boolean)
         .join(" ");
-      const lines = [line, property.url, property.image];
-      console.log(lines.join("\n"));
+      const lines = [line, property.url];
+
+      // Send alert to Telegram
+      await sendTelegramAlert(lines.join("\n"), property.image);
     }
 
     stmt.run(
@@ -131,6 +188,8 @@ async function processResult(result, config) {
 }
 
 async function main() {
+  console.log(`${new Date().toISOString().slice(0, 16)} Starting crawler...`);
+
   // Get all config files
   const crawlerDir = path.join(__dirname, "crawlers");
   const files = fs.readdirSync(crawlerDir);
@@ -186,7 +245,3 @@ main().catch(console.error);
 setInterval(() => {
   main().catch(console.error);
 }, 30 * 60 * 1000); // 30 minutes in milliseconds
-
-setInterval(() => {
-  console.log("Running " + new Date());
-}, 5 * 1000);
