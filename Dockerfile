@@ -1,5 +1,4 @@
-# Use an official Node.js runtime as a parent image
-FROM node:14
+FROM keymetrics/pm2:latest-alpine
 
 # Set the working directory in the container
 WORKDIR /usr/src/app
