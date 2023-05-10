@@ -161,7 +161,7 @@ async function processResult(result, config) {
       ]
         .filter(Boolean)
         .join(" ");
-      const lines = [line, property.url];
+      const lines = [line, `[${property.url}](${property.url})]`];
 
       // Send alert to Telegram
       await sendTelegramAlert(lines.join("\n"), property.image);
