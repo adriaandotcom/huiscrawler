@@ -44,6 +44,7 @@ async function getRow(sql, params) {
 }
 
 async function sendTelegramAlert(text, image) {
+  console.log("Sending Telegram alert: ", text);
   const telegramApiUrl = `https://api.telegram.org/bot${TELEGRAM_TOKEN}`;
 
   // If the image URL is accessible via a public URL, you can send it with sendPhoto method
