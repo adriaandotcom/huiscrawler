@@ -12,6 +12,7 @@ module.exports = {
       const image = $(this).find(".photo img").attr("src");
       const street = $(this).find("h3").text();
       const info = $(this).find(".content p").text();
+      const city = info.split("\n")[1].trim();
       const meters = parseInt(
         info.split("\n")[2]?.split("|")[0].replace("m2", "").trim(),
         10
@@ -41,6 +42,7 @@ module.exports = {
         zipcode: null,
         meters,
         price,
+        _city: city || "Amsterdam",
       });
     });
 
@@ -50,9 +52,10 @@ module.exports = {
   enrichCallback: async function (result) {
     if (result.zipcode) return result;
 
-    const address = `${result.street}, Amsterdam, Netherlands`;
+    const address = `${result.street}, ${result._city}, Netherlands`;
     const zip = await getZipCode(address);
     result.zipcode = zip;
+
     return result;
   },
 };

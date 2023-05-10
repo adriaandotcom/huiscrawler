@@ -146,9 +146,7 @@ async function processResult(result, config) {
       (z) => z.code === parseInt(property.zipcode)
     );
 
-    const alert =
-      (!property.zipcode || zipcodeObj) &&
-      (!property.meters || property.meters >= 59);
+    const alert = zipcodeObj && (!property.meters || property.meters >= 59);
 
     if (alert) {
       const k = property.price ? `€${Math.round(property.price / 1000)}k` : "";
@@ -224,13 +222,17 @@ async function main() {
 
     let result = [];
 
-    if (config.parseJSON) {
-      const json = await response.json();
-      result = config.parseJSON(json);
-    } else {
-      const body = await response.text();
-      const $ = cheerio.load(body);
-      result = config.parseHTML($);
+    try {
+      if (config.parseJSON) {
+        const json = await response.json();
+        result = config.parseJSON(json);
+      } else {
+        const body = await response.text();
+        const $ = cheerio.load(body);
+        result = config.parseHTML($);
+      }
+    } catch (error) {
+      console.error(error);
     }
 
     // Insert into database
