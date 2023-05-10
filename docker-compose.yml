@@ -9,9 +9,11 @@ services:
     environment:
       NODE_ENV: production
       DATA_DIR: "/data"
-      TZ: "Europe/Amsterdam"
+      TZ: "${TZ}"
       TELEGRAM_TOKEN: "${TELEGRAM_TOKEN}"
       TELEGRAM_CHAT_ID: "${TELEGRAM_CHAT_ID}"
       GOOGLE_MAPS_API_KEY: "${GOOGLE_MAPS_API_KEY}"
+      OPENAI_API_KEY: "${OPENAI_API_KEY}"
+      PROMPT: "${PROMPT}"
     volumes:
       - /home/adriaan/huiscrawler:/data
