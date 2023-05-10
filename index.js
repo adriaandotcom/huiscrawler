@@ -13,7 +13,8 @@ const userAgent =
 const dataDir = process.env.DATA_DIR || path.join(__dirname, "data");
 const database = path.join(dataDir, "properties.db");
 
-const { FILTER_PLATFORM, TELEGRAM_TOKEN, TELEGRAM_CHAT_ID } = process.env;
+const { FILTER_PLATFORM, TELEGRAM_TOKEN, TELEGRAM_CHAT_ID, NODE_ENV } =
+  process.env;
 
 // Initialize database
 const initDatabase = async () => {
@@ -196,13 +197,15 @@ async function processResult(db, result, config) {
 
     const alert = zipcodeObj && (!property.meters || property.meters >= 59);
 
+    const useAi =
+      cconfig.getAIProperties && (alert || NODE_ENV === "development");
+
     let ai;
 
     try {
-      ai =
-        config.getAIProperties && alert
-          ? await config.getAIProperties(fetchWithCookies, property)
-          : null;
+      ai = useAi
+        ? await config.getAIProperties(fetchWithCookies, property)
+        : null;
     } catch (error) {
       console.error(error);
     }
@@ -234,8 +237,8 @@ async function processResult(db, result, config) {
         pricePerMeter,
         property.street,
         floor ? `🛗 ${floor}` : null,
-        ai.rooms ? `🛏 ${ai.rooms}` : null,
-        ai.servicecosts ? `🧾 €${ai.servicecosts} p/m` : null,
+        ai?.rooms ? `🛏 ${ai.rooms}` : null,
+        ai?.servicecosts ? `🧾 €${ai.servicecosts} p/m` : null,
       ]
         .filter(Boolean)
         .join(" · ");
@@ -268,7 +271,7 @@ async function processResult(db, result, config) {
       ai?.garden || null,
       ai?.rooftarrace || null,
       ai?.year || null,
-      ai?.rooms || null,
+      property.rooms || ai?.rooms || null,
       ai?.servicecosts || null,
       ai?.rating || null,
       ai?.reason || null,
