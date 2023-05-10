@@ -7,9 +7,12 @@ services:
     platform: linux/amd64
     restart: unless-stopped
     environment:
-      - NODE_ENV=production
-      - DATA_DIR=/data
-      - TZ=Europe/Amsterdam
+      NODE_ENV: production
+      DATA_DIR: "/data"
+      TZ: "Europe/Amsterdam"
+      TELEGRAM_TOKEN: "${TELEGRAM_TOKEN}"
+      TELEGRAM_CHAT_ID: "${TELEGRAM_CHAT_ID}"
+      GOOGLE_MAPS_API_KEY: "${GOOGLE_MAPS_API_KEY}"
     volumes:
       - huiscrawler-db:/data
 

@@ -44,7 +44,6 @@ async function getRow(sql, params) {
 }
 
 async function sendTelegramAlert(text, image) {
-  console.log("Sending Telegram alert: ", text);
   const telegramApiUrl = `https://api.telegram.org/bot${TELEGRAM_TOKEN}`;
 
   let response;
@@ -79,7 +78,7 @@ async function sendTelegramAlert(text, image) {
   }
 
   const json = await response.json();
-  console.log("Telegram response: ", json);
+  if (!json.ok) console.error("Telegram error: ", json);
 }
 
 async function fetchWithCookies(url, options) {
