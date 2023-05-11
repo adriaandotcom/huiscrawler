@@ -198,7 +198,7 @@ async function processResult(db, result, config) {
     const alert = zipcodeObj && (!property.meters || property.meters >= 59);
 
     const useAi =
-      cconfig.getAIProperties && (alert || NODE_ENV === "development");
+      config.getAIProperties && (alert || NODE_ENV === "development");
 
     let ai;
 
