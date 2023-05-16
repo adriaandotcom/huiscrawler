@@ -1,6 +1,6 @@
 const cheerio = require("cheerio");
 const { parseProperties } = require("../lib/chatgpt");
-const { getZipCode } = require("../lib/tools");
+const { getZipCode } = require("../lib/google");
 
 module.exports = {
   targetUrl:

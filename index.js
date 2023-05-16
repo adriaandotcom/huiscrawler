@@ -5,6 +5,8 @@ const sqlite3 = require("sqlite3").verbose();
 const { zipcodes } = require("./lib/constants");
 const fs = require("fs");
 const path = require("path");
+const { sendTelegramAlert } = require("./lib/telegram");
+const { getMapImage } = require("./lib/google");
 
 const cookieJar = new CookieJar();
 const userAgent =
@@ -60,51 +62,6 @@ async function getRow(database, sql, params) {
       else resolve(row);
     });
   });
-}
-
-async function sendTelegramAlert(text, image, options = {}) {
-  if (!TELEGRAM_TOKEN)
-    return console.log(`No TELEGRAM_TOKEN provided to send: ${text}`);
-
-  const telegramApiUrl = `https://api.telegram.org/bot${TELEGRAM_TOKEN}`;
-
-  const disable_notification = options.silent || false;
-
-  let response;
-
-  // If the image URL is accessible via a public URL, you can send it with sendPhoto method
-  if (image?.startsWith("http://") || image?.startsWith("https://")) {
-    response = await fetch(`${telegramApiUrl}/sendPhoto`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        chat_id: TELEGRAM_CHAT_ID,
-        photo: image,
-        caption: text,
-        parse_mode: "Markdown",
-        disable_notification,
-      }),
-    });
-  } else {
-    // If no image or image not accessible via a public URL, send a text message
-    response = await fetch(`${telegramApiUrl}/sendMessage`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        chat_id: TELEGRAM_CHAT_ID,
-        text: text,
-        parse_mode: "Markdown",
-        disable_notification,
-      }),
-    });
-  }
-
-  const json = await response.json();
-  if (!json.ok) console.error("Telegram error:", json);
 }
 
 async function fetchWithCookies(url, options) {
@@ -250,11 +207,16 @@ async function processResult(db, result, config) {
         ai?.reason ? `_AI rating ${ai.rating || 0}/100. ${ai.reason}_` : null,
       ];
 
+      // Get map image from Google
+      const city = property._city || "Amsterdam";
+      const address = `${property.street}, ${city}, The Netherlands`;
+      const imageBuffer = await getMapImage({ address });
+
       // Send alert to Telegram
       const disable_notification = zipcodeObj?.likebility <= 5;
       await sendTelegramAlert(
         lines.filter(Boolean).join("\n"),
-        property.image,
+        [property.image, imageBuffer],
         { disable_notification }
       );
     }
