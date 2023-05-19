@@ -1,7 +1,4 @@
-FROM keymetrics/pm2:latest-alpine
-
-# Set the working directory in the container
-WORKDIR /usr/src/app
+FROM keymetrics/pm2:latest-slim
 
 # We don't need the standalone Chromium
 ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD true
@@ -14,6 +11,9 @@ RUN apt-get update && apt-get install gnupg wget -y && \
   apt-get update && \
   apt-get install google-chrome-stable -y --no-install-recommends && \
   rm -rf /var/lib/apt/lists/*
+
+# Set the working directory in the container
+WORKDIR /usr/src/app
 
 # Copy package.json and package-lock.json (if available) to the working directory
 COPY package*.json ./
