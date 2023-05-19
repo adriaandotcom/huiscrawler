@@ -1,4 +1,8 @@
-FROM keymetrics/pm2:latest-slim
+FROM node:slim
+
+RUN npm install pm2 -g
+
+# FROM keymetrics/pm2:latest-slim
 
 # We don't need the standalone Chromium
 ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD true
