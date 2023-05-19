@@ -8,6 +8,11 @@ const path = require("path");
 const { sendTelegramAlert } = require("./lib/telegram");
 const { getMapImage } = require("./lib/google");
 
+const { Cluster } = require("puppeteer-cluster");
+const vanillaPuppeteer = require("puppeteer");
+const { addExtra } = require("puppeteer-extra");
+const Stealth = require("puppeteer-extra-plugin-stealth");
+
 const cookieJar = new CookieJar();
 const userAgent =
   "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36";
@@ -105,7 +110,7 @@ function emoji(likebility) {
   return emojis[likebility];
 }
 
-async function processResult(db, result, config) {
+async function processResult(db, result, config, fetchFunction) {
   // Insert results into database
   const stmt = db.prepare(
     `INSERT OR IGNORE INTO properties
@@ -126,7 +131,7 @@ async function processResult(db, result, config) {
     // Run enrichCallback if it exists
     if (config.enrichCallback) {
       try {
-        property = await config.enrichCallback(property, fetchWithCookies);
+        property = await config.enrichCallback(property, fetchFunction);
       } catch (error) {
         console.error(error);
       }
@@ -160,9 +165,7 @@ async function processResult(db, result, config) {
     let ai;
 
     try {
-      ai = useAi
-        ? await config.getAIProperties(fetchWithCookies, property)
-        : null;
+      ai = useAi ? await config.getAIProperties(fetchFunction, property) : null;
     } catch (error) {
       console.error(error);
     }
@@ -246,8 +249,48 @@ async function processResult(db, result, config) {
   stmt.finalize();
 }
 
+const createCluster = async () => {
+  const puppeteer = addExtra(vanillaPuppeteer);
+  puppeteer.use(Stealth());
+
+  const cluster = await Cluster.launch({
+    concurrency: Cluster.CONCURRENCY_BROWSER,
+    maxConcurrency: 2, // Adjust the number of concurrent browsers as needed
+    puppeteer,
+    puppeteerOptions: {
+      headless: "new",
+      args: [
+        "--no-sandbox",
+        "--disable-setuid-sandbox",
+        "--disable-gpu",
+        "--disable-dev-shm-usage",
+        "--no-first-run",
+        "--no-zygote",
+        "--deterministic-fetch",
+        "--disable-features=IsolateOrigins",
+        "--disable-site-isolation-trials",
+      ],
+    },
+  });
+
+  return cluster;
+};
+
 async function main() {
-  console.log(`${new Date().toISOString().slice(0, 16)} Starting crawler...`);
+  const cluster = await createCluster();
+
+  await cluster.task(async ({ page, data = {} }) => {
+    if (!data?.url || !/^https?:\/\//.test(data.url)) {
+      throw new Error(`Invalid URL: ${data.url}`);
+    }
+
+    await page.goto(data.url, { waitUntil: "networkidle2", timeout: 15000 });
+    return await page.content();
+  });
+
+  console.log(
+    `=> ${new Date().toISOString().slice(0, 16)} Starting crawler...`
+  );
 
   const db = new sqlite3.Database(database, (error) => {
     if (error) console.error(error);
@@ -269,48 +312,61 @@ async function main() {
         `Config ${configFile} does not have a parseHTML or parseJSON function`
       );
 
-    // Fetch initial page to get PHPSESSID cookie
-    if (config.baseUrl) await fetchWithCookies(config.baseUrl);
-
-    let options = {};
-
-    if (config.postData) {
-      const token = cookieJar
-        ?.getCookiesSync(config.baseUrl)
-        ?.find((c) => c.key === "__RequestVerificationToken")?.value;
-
-      options = {
-        method: "POST",
-        body: config.postData.replace(
-          /\{\{__RequestVerificationToken\}\}/,
-          token || ""
-        ),
-        headers: {
-          "Content-Type": "application/x-www-form-urlencoded",
-          "X-Requested-With": "XMLHttpRequest",
-        },
-      };
-    }
-
-    const response = await fetchWithCookies(config.targetUrl, options);
-
     let result = [];
 
-    try {
-      if (config.parseJSON) {
-        const json = await response.json();
-        result = config.parseJSON(json);
-      } else {
-        const body = await response.text();
-        const $ = cheerio.load(body);
-        result = config.parseHTML($);
+    if (config.puppeteer) {
+      const html = await cluster.execute({ url: config.targetUrl });
+      const $ = cheerio.load(html);
+      result = config.parseHTML($);
+    } else {
+      // Fetch initial page to get PHPSESSID cookie
+      if (config.baseUrl) await fetchWithCookies(config.baseUrl);
+
+      let options = {};
+
+      if (config.postData) {
+        const token = cookieJar
+          ?.getCookiesSync(config.baseUrl)
+          ?.find((c) => c.key === "__RequestVerificationToken")?.value;
+
+        options = {
+          method: "POST",
+          body: config.postData.replace(
+            /\{\{__RequestVerificationToken\}\}/,
+            token || ""
+          ),
+          headers: {
+            "Content-Type": "application/x-www-form-urlencoded",
+            "X-Requested-With": "XMLHttpRequest",
+          },
+        };
       }
-    } catch (error) {
-      console.error(error);
+
+      const response = await fetchWithCookies(config.targetUrl, options);
+
+      try {
+        if (config.parseJSON) {
+          const json = await response.json();
+          result = config.parseJSON(json);
+        } else {
+          const body = await response.text();
+          const $ = cheerio.load(body);
+          result = config.parseHTML($);
+        }
+      } catch (error) {
+        console.error(error);
+      }
     }
 
     // Insert into database
-    await processResult(db, result, config);
+    await processResult(
+      db,
+      result,
+      config,
+      config.puppeteer
+        ? (...props) => cluster.execute(...props)
+        : fetchWithCookies
+    );
   }
 
   db.close();

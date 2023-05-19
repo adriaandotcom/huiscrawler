@@ -15,6 +15,10 @@
     "form-data": "^4.0.0",
     "node-fetch": "^2.6.11",
     "openai": "^3.2.1",
+    "puppeteer": "^20.2.1",
+    "puppeteer-cluster": "^0.23.0",
+    "puppeteer-extra": "^3.3.6",
+    "puppeteer-extra-plugin-stealth": "^2.11.2",
     "sqlite3": "^5.1.6",
     "tough-cookie": "^4.1.2"
   },
