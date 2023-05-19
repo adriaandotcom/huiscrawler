@@ -20,8 +20,7 @@ const userAgent =
 const dataDir = process.env.DATA_DIR || path.join(__dirname, "data");
 const database = path.join(dataDir, "properties.db");
 
-const { FILTER_PLATFORM, TELEGRAM_TOKEN, TELEGRAM_CHAT_ID, NODE_ENV } =
-  process.env;
+const { FILTER_PLATFORM, PUPPETEER_EXECUTABLE_PATH, NODE_ENV } = process.env;
 
 // Initialize database
 const initDatabase = async () => {
@@ -254,6 +253,7 @@ const createCluster = async () => {
   puppeteer.use(Stealth());
 
   const cluster = await Cluster.launch({
+    executablePath: PUPPETEER_EXECUTABLE_PATH,
     concurrency: Cluster.CONCURRENCY_BROWSER,
     maxConcurrency: 2, // Adjust the number of concurrent browsers as needed
     puppeteer,
