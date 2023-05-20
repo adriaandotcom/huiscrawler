@@ -4,7 +4,7 @@ const { parsePrice, parseSize } = require("../lib/helpers");
 const { getZipCode } = require("../lib/google");
 
 module.exports = {
-  note: "Makelaar gevonden op 20 mei tijdens rondje lopen",
+  note: "Makelaar gevonden 20 mei tijdens rondje lopen",
   targetUrl: "https://noortmakelaars.nl/aanbod-Amsterdam/",
 
   parseHTML: function ($) {

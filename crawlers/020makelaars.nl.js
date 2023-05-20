@@ -3,7 +3,7 @@ const { parseProperties } = require("../lib/chatgpt");
 const { parsePrice, parseSize } = require("../lib/helpers");
 
 module.exports = {
-  note: "Makelaar gevonden op 20 mei tijdens rondje lopen",
+  note: "Makelaar gevonden 20 mei tijdens rondje lopen",
   targetUrl: "https://www.020makelaars.nl/aanbod/woningaanbod/AMSTERDAM/koop/",
 
   parseHTML: function ($) {

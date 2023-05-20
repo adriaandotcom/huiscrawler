@@ -3,7 +3,7 @@ const { parseProperties } = require("../lib/chatgpt");
 const { getZipCode } = require("../lib/google");
 
 module.exports = {
-  note: "Makelaar gevonden op 19 mei tijdens rondje lopen",
+  note: "Makelaar gevonden 19 mei tijdens rondje lopen",
   targetUrl: "https://yourhome.nl/aanbod/koopwoningen",
 
   parseHTML: function ($) {
