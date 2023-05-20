@@ -24,7 +24,7 @@ COPY package*.json ./
 
 # Install the application dependencies
 ENV NPM_CONFIG_LOGLEVEL warn
-RUN npm install --production
+RUN npm install --omit=dev
 
 # Bundle the app source inside the Docker image
 COPY . .

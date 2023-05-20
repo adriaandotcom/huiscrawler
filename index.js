@@ -33,6 +33,7 @@ const initDatabase = async () => {
     db.run(
       `CREATE TABLE IF NOT EXISTS properties(
         id INTEGER PRIMARY KEY AUTOINCREMENT,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
         platform TEXT,
         url TEXT UNIQUE,
         image TEXT,
@@ -109,13 +110,22 @@ function emoji(likebility) {
   return emojis[likebility];
 }
 
+const getZipcodeRating = (zipcode) => {
+  if (!zipcode) return false;
+
+  const found = zipcodes.find((z) => z.code === parseInt(zipcode));
+
+  if (!found) return false;
+  return found.likebility;
+};
+
 async function processResult(db, result, config, fetchFunction) {
   // Insert results into database
   const stmt = db.prepare(
     `INSERT OR IGNORE INTO properties
-    (platform, url, image, floor, street, zipcode, meters, price, garden, rooftarrace, year, rooms, servicecosts, rating, reason)
+    (platform, created_at, url, image, floor, street, zipcode, meters, price, garden, rooftarrace, year, rooms, servicecosts, rating, reason)
     VALUES
-    (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+    (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
   );
 
   for (let property of result) {
@@ -137,7 +147,10 @@ async function processResult(db, result, config, fetchFunction) {
     }
 
     // Get apendix of property.street, like --3 should return 3, -H should return H, etc.
-    const appendix = property.street.match(/[0-9]+[- ]+([1-9]|h|hs|i+)$/i)?.[1];
+    const appendix = property.street?.match(
+      /[0-9]+[- ]+([1-9]|h|hs|i+)$/i
+    )?.[1];
+
     const floor =
       property.floor === "begane grond"
         ? 0
@@ -152,14 +165,11 @@ async function processResult(db, result, config, fetchFunction) {
         : null;
 
     // Check if the zipcode is in your list
-    const zipcodeObj = zipcodes.find(
-      (z) => z.code === parseInt(property.zipcode)
-    );
-
-    const alert = zipcodeObj && (!property.meters || property.meters >= 59);
+    let zipRating = getZipcodeRating(property.zipcode);
 
     const useAi =
-      config.getAIProperties && (alert || NODE_ENV === "development");
+      config.getAIProperties &&
+      (!property.zipcode || zipRating || NODE_ENV === "development");
 
     let ai;
 
@@ -168,6 +178,14 @@ async function processResult(db, result, config, fetchFunction) {
     } catch (error) {
       console.error(error);
     }
+
+    if (!property.zipcode && ai?.zipcode)
+      zipRating = getZipcodeRating(ai.zipcode);
+
+    const alert =
+      zipRating &&
+      (!property.meters || property.meters >= 59) &&
+      (!property.price || property.price <= 800000);
 
     if (alert) {
       const pricePerMeter =
@@ -185,12 +203,12 @@ async function processResult(db, result, config, fetchFunction) {
           : 0;
 
       const emojiScore = Math.round(
-        (zipcodeObj?.likebility + floorScore + (ai?.rating || 10) / 10) / 3
+        (zipRating + floorScore + (ai?.rating || 10) / 10) / 3
       );
 
       const line = [
         emojiScore ? `${emoji(emojiScore)} ${emojiScore}/10` : null,
-        `📍${zipcodeObj?.likebility}/10`,
+        `📍${zipRating}/10`,
         property.price ? `€${Math.round(property.price / 1000)}k` : "",
         property.meters ? `${property.meters}m2` : "",
         pricePerMeter,
@@ -215,7 +233,7 @@ async function processResult(db, result, config, fetchFunction) {
       const imageBuffer = await getMapImage({ address });
 
       // Send alert to Telegram
-      const disable_notification = zipcodeObj?.likebility <= 5;
+      const disable_notification = zipRating <= 5;
       await sendTelegramAlert(
         lines.filter(Boolean).join("\n"),
         [property.image, imageBuffer],
@@ -223,13 +241,17 @@ async function processResult(db, result, config, fetchFunction) {
       );
     }
 
+    let zipcode = property.zipcode || ai?.zipcode || null;
+    if (zipcode) zipcode = zipcode.toUpperCase().trim();
+
     stmt.run(
       config.platform,
+      new Date().toISOString(),
       property.url,
       property.image,
       floor,
-      property.street,
-      property.zipcode,
+      property.street || ai?.street || null,
+      zipcode,
       property.meters || ai?.size || null,
       property.price || ai?.price || null,
       ai?.garden || null,
@@ -303,9 +325,12 @@ async function main() {
 
   for (const configFile of configFiles) {
     const config = require(path.join(crawlerDir, configFile));
+    config.platform = config.platform || configFile.replace(".js", "");
 
     // Skip other than FILTER_PLATFORM crawlers
     if (FILTER_PLATFORM && config.platform !== FILTER_PLATFORM) continue;
+
+    console.log(`=> Crawling ${config.platform}...`);
 
     if (!config.parseHTML && !config.parseJSON)
       throw new Error(
@@ -325,9 +350,11 @@ async function main() {
       let options = {};
 
       if (config.postData) {
-        const token = cookieJar
-          ?.getCookiesSync(config.baseUrl)
-          ?.find((c) => c.key === "__RequestVerificationToken")?.value;
+        const token = config.baseUrl
+          ? cookieJar
+              ?.getCookiesSync(config.baseUrl)
+              ?.find((c) => c.key === "__RequestVerificationToken")?.value
+          : null;
 
         options = {
           method: "POST",
