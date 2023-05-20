@@ -187,7 +187,9 @@ async function processResult(db, result, config, fetchFunction) {
     const street = property.street || ai?.street;
 
     const alert =
-      zipRating && (!size || size >= 59) && (!price || price <= 800000);
+      zipRating &&
+      (!size || size >= 59) &&
+      (!price || (price >= 200000 && price <= 800000));
 
     if (alert) {
       const pricePerMeter =
