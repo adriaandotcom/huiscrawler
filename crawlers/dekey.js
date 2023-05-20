@@ -3,6 +3,7 @@ const { parseProperties } = require("../lib/chatgpt");
 
 module.exports = {
   baseUrl: "https://www.vindjeplekbijdekey.nl",
+  note: "Via Dennis van de Hypotheker",
   targetUrl:
     "https://www.vindjeplekbijdekey.nl/dekey-api/aanbod?stad=27&verkoopstatus=beschikbaar",
   platform: "dekey",

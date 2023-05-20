@@ -2,6 +2,7 @@ const { parseProperties } = require("../lib/chatgpt");
 
 module.exports = {
   platform: "rochdale",
+  note: "Via Dennis van de Hypotheker",
   baseUrl: null,
   targetUrl:
     "https://search.hexia.io/api/v2/facets/bu-kcp-ksp-rochdale-web/1-public/unit/nl/unit?key=buy&is_advertised=1&unit_type=1&selling_price_min=200000&selling_price_max=800000&from=0&sort[direction]=asc&sort[field]=fields.street&size=12&bypass=house_type,energy_label&results=1",

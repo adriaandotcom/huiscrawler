@@ -3,6 +3,7 @@ const { parseProperties } = require("../lib/chatgpt");
 
 module.exports = {
   platform: "stadgenoot",
+  note: "Via Dennis van de Hypotheker",
   baseUrl: "https://aanbod.stadgenoot.nl/woningen/koopaanbod/",
   targetUrl:
     "https://aanbod.stadgenoot.nl/umbraco/WebCit/AanbodApi/GetAanbod?1683663471&init=false&type=wonen&page=1&orderType=date&order=desc&filters=rentOrSale;Koop$price;0,700000$area;60,97",
@@ -37,9 +38,9 @@ module.exports = {
     const $ = cheerio.load(html);
 
     const contents = [
-      $("#omschrijving")?.text()?.trim(),
-      $("#kenmerken")?.text()?.trim(),
       $(".eenheid")?.text()?.trim(),
+      $("#kenmerken")?.text()?.trim(),
+      $("#omschrijving")?.text()?.trim(),
     ].filter(Boolean);
 
     if (contents.length === 0) return null;

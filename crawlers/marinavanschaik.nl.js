@@ -4,6 +4,7 @@ const { parseProperties } = require("../lib/chatgpt");
 
 module.exports = {
   platform: "marinavanschaik",
+  note: "Makelaar gevonden via chill Funda huis",
   targetUrl: "https://www.marinavanschaik.nl/",
 
   parseHTML: function ($) {

@@ -1,0 +1,352 @@
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="referrer" content="no-referrer" />
+    <title>Huizen crawler</title>
+    <script src="https://unpkg.com/vue@3.2.36/dist/vue.global.js"></script>
+    <link
+      href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css"
+      rel="stylesheet"
+    />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <style>
+      body {
+        font-family: sans-serif;
+      }
+      main {
+        max-width: 400px;
+        box-shadow: 0px 0 10px 7px #dbdbdb;
+        margin: 0 auto;
+      }
+    </style>
+  </head>
+  <body>
+    <main id="app" class="p-4">
+      <h1 class="text-2xl font-bold">Huizen crawler</h1>
+
+      <p v-if="error" class="text-red-500">{{ error }}</p>
+
+      <div class="flex flex-col space-y-4 mt-4">
+        <div class="flex items-center space-x-4">
+          <label for="price_start" class="text-gray-600 mr-auto">Price</label>
+          <select
+            id="price_start"
+            name="price_start"
+            v-model="priceStart"
+            class="border border-gray-300 rounded px-2 py-1"
+          >
+            <option
+              :key="price"
+              :value="price"
+              v-for="price in priceStartOptions"
+            >
+              {{formatPrice(price)}}
+            </option>
+          </select>
+          <select
+            id="price_end"
+            name="price_end"
+            v-model="priceEnd"
+            class="border border-gray-300 rounded px-2 py-1"
+          >
+            <option
+              :key="price"
+              :value="price"
+              v-for="price in priceEndOptions"
+            >
+              {{formatPrice(price)}}
+            </option>
+          </select>
+        </div>
+        <div class="flex items-center space-x-4">
+          <label for="size_start" class="text-gray-600 mr-auto">Size</label>
+          <select
+            id="size_start"
+            v-model="sizeStart"
+            class="border border-gray-300 rounded px-2 py-1"
+          >
+            <option
+              :key="value"
+              :value="value"
+              v-for="value in sizeStartOptions"
+            >
+              {{formatSize(value)}}
+            </option>
+          </select>
+          <select
+            v-model="sizeEnd"
+            class="border border-gray-300 rounded px-2 py-1"
+          >
+            <option :key="value" :value="value" v-for="value in sizeEndOptions">
+              {{formatSize(value)}}
+            </option>
+            <option :value="null">Unlimited</option>
+          </select>
+        </div>
+
+        <ul>
+          <li v-for="zipcode in zipcodes">
+            <input
+              type="checkbox"
+              v-model="zipcode.checked"
+              @click="checkChildren(zipcode)"
+            />
+            {{ zipcode.name }}
+            <ul class="ml-4">
+              <li v-for="(child, index) in zipcode.children">
+                <input
+                  type="checkbox"
+                  v-model="child.checked"
+                  :id="'child-'+index"
+                />
+                <label class="ml-1" :for="'child-'+index">
+                  {{ child.name }}
+                </label>
+              </li>
+            </ul>
+          </li>
+        </ul>
+
+        <p v-if="!filteredProperties.length" class="text-gray-600">
+          No properties found.
+        </p>
+        <ul v-else class="divide-y divide-gray-300">
+          <li
+            v-for="property of filteredProperties"
+            :key="property.id"
+            class="py-4"
+          >
+            <div class="space-y-2">
+              <h2 class="text-xl font-semibold">
+                {{ property.street }}
+                <small class="text-normal font-normal">
+                  <a :href="property.url" class="text-red-500"
+                    >{{getHostname(property.url)}}</a
+                  ></small
+                >
+              </h2>
+              <p class="text-gray-600">
+                {{ property.zipcode }} &middot; {{formatPrice( property.price)
+                }} &middot; {{ property.meters }}m<sup>2</sup>
+              </p>
+              <a :href="property.url" class="block">
+                <img
+                  :src="property.image"
+                  class="w-full rounded"
+                  alt="Property Image"
+                />
+              </a>
+            </div>
+          </li>
+        </ul>
+      </div>
+    </main>
+
+    <script>
+      const data = window.DATA;
+
+      const app = Vue.createApp({
+        data() {
+          return {
+            properties: data?.properties || [],
+            error: data?.error || null,
+            priceStart: 400000,
+            priceEnd: 700000,
+            sizeStart: 67,
+            sizeEnd: null,
+            zipcodes: [
+              {
+                name: "1011-1018: Amsterdam-Centrum: Binnenstad (en delen van West en Westpoort)",
+                checked: false,
+                children: [
+                  {
+                    name: "1011: Nieuwmarkt/Lastage: Lastage, Oosterdokseiland, Scheepvaarthuisbuurt, Rapenburg, Uilenburg, Valkenburg, Waterlooplein",
+                    checked: false,
+                  },
+                  {
+                    name: "1012: Burgwallen (Oudezijde en Nieuwezijde), Kop Zeedijk",
+                    checked: false,
+                  },
+                  {
+                    name: "1013: Haarlemmerbuurt, Westelijke Eilanden, Zeeheldenbuurt, Spaarndammerbuurt, Houthaven, Minervahaven, Mercuriushaven, Vlothaven, Coenhaven",
+                    checked: false,
+                  },
+                  {
+                    name: "1014: Alfa-driehoek, Kabelweg, Transformatorweg, Isolatorweg, Sloterdijk (dorp), Westergasfabriek",
+                    checked: false,
+                  },
+                  {
+                    name: "1015: Noordwestelijke Grachtengordel, Noord-Jordaan, Marnixplein",
+                    checked: false,
+                  },
+                  {
+                    name: "1016: Westelijke Grachtengordel, Zuid-Jordaan, Raamplein",
+                    checked: false,
+                  },
+                  {
+                    name: "1017: Zuidelijke Grachtengordel, Leidsebuurt, Weteringschans, Frederiksplein, Rembrandtplein",
+                    checked: false,
+                  },
+                  {
+                    name: "1018: Weesperbuurt, Plantage, Sarphatistraat, Kadijken, Oostelijke Eilanden, Czaar Peterbuurt",
+                    checked: false,
+                  },
+                ],
+              },
+              {
+                name: "1019: Oostelijk Havengebied (Amsterdam-Oost)",
+                checked: false,
+                children: [],
+              },
+              {
+                name: "1020-1039: Amsterdam-Noord",
+                checked: false,
+                children: [
+                  {
+                    name: "1020-1028: Amsterdam-Noord (ten oosten van het Noordhollandsch Kanaal)",
+                    checked: false,
+                  },
+                  { name: "1021: Vogelbuurt, Vogeldorp", checked: false },
+                  { name: "1022: Nieuwendam", checked: false },
+                  {
+                    name: "1023: Tuindorp Nieuwendam, Schellingwoude",
+                    checked: false,
+                  },
+                  {
+                    name: "1024: Nieuwendam-Noord, Waterlandpleinbuurt",
+                    checked: false,
+                  },
+                  {
+                    name: "1025: Tuindorp Buiksloot, Buikslotermeer",
+                    checked: false,
+                  },
+                  {
+                    name: "1026: Durgerdam (gemeente Amsterdam)",
+                    checked: false,
+                  },
+                  {
+                    name: "1027: Zunderdorp (gemeente Amsterdam)",
+                    checked: false,
+                  },
+                  {
+                    name: "1028: Holysloot, Ransdorp (gemeente Amsterdam)",
+                    checked: false,
+                  },
+                ],
+              },
+            ],
+          };
+        },
+        methods: {
+          formatPrice(price) {
+            return new Intl.NumberFormat("nl-NL", {
+              style: "currency",
+              currency: "EUR",
+              minimumFractionDigits: 0,
+              maximumFractionDigits: 0,
+            }).format(price);
+          },
+          formatSize(size) {
+            if (typeof size !== "number") return;
+            return `${size}m²`;
+          },
+          getHostname(url) {
+            if (!url) return "";
+            const { hostname } = new URL(url);
+            return hostname;
+          },
+          updateUrl() {
+            const search = new URLSearchParams(window.location.search);
+            search.set("price", `${this.priceStart}-${this.priceEnd}`);
+            search.set(
+              "size",
+              `${this.sizeStart}-${this.sizeEnd || "unlimited"}`
+            );
+
+            window.history.replaceState({}, "", `?${search.toString()}`);
+            localStorage.setItem("search", `?${search.toString()}`);
+          },
+          checkChildren(zipcode) {
+            for (let child of zipcode.children) {
+              child.checked = !zipcode.checked;
+            }
+          },
+        },
+        computed: {
+          filteredProperties() {
+            return this.properties.filter((property) => {
+              if (this.priceStart >= this.priceEnd) return false;
+
+              return (
+                property.price >= this.priceStart &&
+                property.price <= this.priceEnd
+              );
+            });
+          },
+          priceStartOptions() {
+            const prices = [
+              0, 100000, 200000, 300000, 400000, 500000, 600000, 700000, 800000,
+              900000, 1000000, 1250000,
+            ];
+            if (!prices.includes(this.priceStart)) prices.push(this.priceStart);
+            prices.sort((a, b) => a - b);
+            return prices;
+          },
+          priceEndOptions() {
+            const prices = [
+              100000, 200000, 300000, 400000, 500000, 600000, 700000, 800000,
+              900000, 1000000, 1250000, 1500000,
+            ];
+            if (!prices.includes(this.priceEnd)) prices.push(this.priceEnd);
+            prices.sort((a, b) => a - b);
+            return prices;
+          },
+          sizeStartOptions() {
+            const sizes = [0, 50, 60, 70, 80, 90, 100, 110, 120, 130, 140, 150];
+            if (this.sizeStart && !sizes.includes(this.sizeStart))
+              sizes.push(this.sizeStart);
+            sizes.sort((a, b) => a - b);
+            return sizes;
+          },
+          sizeEndOptions() {
+            const sizes = [50, 60, 70, 80, 90, 100, 110, 120, 130, 140, 150];
+            if (this.sizeEnd && !sizes.includes(this.sizeEnd))
+              sizes.push(this.sizeEnd);
+            sizes.sort((a, b) => a - b);
+            return sizes;
+          },
+        },
+        watch: {
+          priceStart() {
+            this.updateUrl();
+          },
+          priceEnd() {
+            this.updateUrl();
+          },
+          sizeStart() {
+            this.updateUrl();
+          },
+          sizeEnd() {
+            this.updateUrl();
+          },
+        },
+        mounted() {
+          let search = window.location.search;
+          const stored = localStorage.getItem("search");
+          if ((!search || search === "?") && stored) search = stored;
+
+          const urlParams = new URLSearchParams(search);
+          const price = urlParams.get("price");
+          const [from, to] = urlParams.get("price")?.split("-") || [];
+          if (from) this.priceStart = parseInt(from);
+          if (to) this.priceEnd = parseInt(to);
+          const size = urlParams.get("size");
+          const [sizeFrom, sizeTo] = urlParams.get("size")?.split("-") || [];
+          if (sizeFrom) this.sizeStart = parseInt(sizeFrom);
+          if (sizeTo === "unlimited") this.sizeEnd = null;
+          else if (sizeTo) this.sizeEnd = parseInt(sizeTo);
+        },
+      }).mount("#app");
+    </script>
+  </body>
+</html>

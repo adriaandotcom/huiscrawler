@@ -2,16 +2,18 @@ const cheerio = require("cheerio");
 const { parseProperties } = require("../lib/chatgpt");
 
 module.exports = {
-  targetUrl: "https://www.companyon.nl/aanbod/woningaanbod/amsterdam/koop/",
+  note: "Makelaar gevonden op 20 mei tijdens rondje lopen",
+  targetUrl:
+    "https://www.raadsheerbaart.nl/aanbod/woningaanbod/AMSTERDAM/koop/",
 
   parseHTML: function ($) {
     const result = [];
 
     $("li.aanbodEntry").each(function () {
       const url =
-        "https://www.companyon.nl" +
+        "https://www.raadsheerbaart.nl" +
         $(this)
-          .find('a[href^="/aanbod/woningaanbod/amsterdam/koop/"]')
+          .find('a[href^="/aanbod/woningaanbod/amsterdam/koop/" i]')
           .first()
           .attr("href");
 

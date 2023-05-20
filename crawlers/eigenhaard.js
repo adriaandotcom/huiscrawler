@@ -3,6 +3,7 @@ const { parseProperties } = require("../lib/chatgpt");
 const { getZipCode } = require("../lib/google");
 
 module.exports = {
+  note: "Via Dennis van de Hypotheker",
   targetUrl:
     "https://www.eigenhaard.nl/te-koop/zoek?&regions=&prijs_min=200000&prijs_max=1000000&straal=0&woningtype=-1&bouwvorm=-1&oppervlakte=50|1000&kamers=-1&sort=AanmaakDatumDesc&view=List",
   platform: "eigenhaard",

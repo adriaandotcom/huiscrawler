@@ -4,6 +4,7 @@ const { parseProperties } = require("../lib/chatgpt");
 
 module.exports = {
   platform: "dealliantie",
+  note: "Via Dennis van de Hypotheker",
   baseUrl: "https://ik-zoek.de-alliantie.nl/kopen/",
   targetUrl: "https://ik-zoek.de-alliantie.nl/getproperties",
   postData:

@@ -3,6 +3,7 @@ const { parseProperties } = require("../lib/chatgpt");
 const { getZipCode } = require("../lib/google");
 
 module.exports = {
+  note: "Makelaar gevonden op 19 mei tijdens rondje lopen",
   targetUrl:
     "https://www.denederlanden.eu/wonen/zoeken/heel-nederland/amsterdam/",
 

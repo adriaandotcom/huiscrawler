@@ -2,6 +2,7 @@ const { parseProperties } = require("../lib/chatgpt");
 
 module.exports = {
   platform: "ymere",
+  note: "Via Dennis van de Hypotheker",
   baseUrl: "https://aanbod.ymere.nl/aanbod/koopwoningen/",
   targetUrl:
     "https://aanbod.ymere.nl/portal/publication/frontend/getallobjects/format/json",

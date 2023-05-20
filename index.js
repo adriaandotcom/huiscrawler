@@ -1,3 +1,4 @@
+const http = require("http");
 const fetch = require("node-fetch");
 const cheerio = require("cheerio");
 const { CookieJar } = require("tough-cookie");
@@ -20,7 +21,12 @@ const userAgent =
 const dataDir = process.env.DATA_DIR || path.join(__dirname, "data");
 const database = path.join(dataDir, "properties.db");
 
-const { FILTER_PLATFORM, PUPPETEER_EXECUTABLE_PATH, NODE_ENV } = process.env;
+const {
+  FILTER_PLATFORM,
+  PUPPETEER_EXECUTABLE_PATH,
+  NODE_ENV,
+  PORT = "3008",
+} = process.env;
 
 // Initialize database
 const initDatabase = async () => {
@@ -147,9 +153,9 @@ async function processResult(db, result, config, fetchFunction) {
     }
 
     // Get apendix of property.street, like --3 should return 3, -H should return H, etc.
-    const appendix = property.street?.match(
-      /[0-9]+[- ]+([1-9]|h|hs|i+)$/i
-    )?.[1];
+    const appendix = property.street
+      ?.match(/[0-9]+[- ]+([1-9]|h|hs|i+)$/i)?.[1]
+      ?.toLowerCase();
 
     const floor =
       property.floor === "begane grond"
@@ -215,8 +221,13 @@ async function processResult(db, result, config, fetchFunction) {
           ? 5
           : 0;
 
+      const sizeScore = size >= 80 ? 10 : size >= 70 ? 8 : size >= 67 ? 5 : 0;
+
+      const priceScore =
+        price <= 600000 ? 10 : price <= 700000 ? 8 : price <= 800000 ? 4 : 0;
+
       const emojiScore = Math.round(
-        (zipRating + floorScore + (ai?.rating || 10) / 10) / 3
+        (zipRating + floorScore * 3 + sizeScore + priceScore) / 6
       );
 
       const line = [
@@ -234,10 +245,12 @@ async function processResult(db, result, config, fetchFunction) {
         .join(" · ");
 
       const lines = [
-        emoji(emojiScore) >= 7 ? `🚨🚨🚨 Might be a good property!` : "",
+        emojiScore >= 7 ? `🚨🚨🚨 Might be a good property!` : "",
         line,
         `[${property.url}](${property.url})`,
-        ai?.reason ? `_AI rating ${ai.rating || 0}/100. ${ai.reason}_` : null,
+        !floorScore ? `*No garden or rooftop terrace*` : null,
+        ai?.reason ? `_${ai.reason}_` : null,
+        config.note ? `🔍 ${config.note}` : null,
       ];
 
       // Get map image from Google
@@ -330,9 +343,9 @@ async function main() {
   const configFiles = files.filter((file) => file.endsWith(".js"));
 
   console.log(
-    `=> ${new Date().toISOString().slice(0, 16)} Starting ${
-      configFiles.length
-    } crawlers...`
+    `=> ${new Date().toISOString().slice(0, 16)} Starting${
+      FILTER_PLATFORM ? " 1 of" : ""
+    } ${configFiles.length} crawlers...`
   );
 
   for (const configFile of configFiles) {
@@ -422,3 +435,37 @@ async function main() {
     main().catch(console.error);
   }, 30 * 60 * 1000); // 30 minutes in milliseconds
 })();
+
+// Setup server returning the latest results in html
+
+const server = http.createServer(async (req, res) => {
+  res.writeHead(200, { "Content-Type": "text/html" });
+
+  const db = new sqlite3.Database(database, (error) => {
+    if (error) {
+      console.error(error);
+      res.end(error.message);
+    }
+  });
+
+  const template = fs.readFileSync(path.join(__dirname, "index.html"), "utf8");
+  const query = `SELECT * FROM properties ORDER BY id DESC LIMIT 10`;
+
+  db.all(query, [], (error, properties) => {
+    const data = {};
+    if (error) {
+      res.statusCode = 500;
+      data.error = error.message;
+      data.properties = [];
+    } else {
+      data.properties = properties;
+    }
+    res.end(template.replace("window.DATA", JSON.stringify(data)));
+
+    db.close();
+  });
+});
+
+server.listen(PORT, () => {
+  console.log(`Server running at http://localhost:${PORT}/`);
+});
