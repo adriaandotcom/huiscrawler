@@ -36,8 +36,6 @@ module.exports = {
       .text()
       .trim();
 
-    if (column) return null;
-    const properties = await parseProperties(column);
-    return properties;
+    return parseProperties(column);
   },
 };
