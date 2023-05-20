@@ -12,7 +12,8 @@ module.exports = {
     ).each(function () {
       const url = "https://snijmakelaardij.nl" + $(this).attr("href");
 
-      const image = $(this).find("img.img")?.attr("src");
+      const image =
+        "https://snijmakelaardij.nl" + $(this).find("img.img")?.attr("src");
 
       result.push({
         url,

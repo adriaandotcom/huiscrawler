@@ -14,7 +14,7 @@ module.exports = {
       const image = $(this)
         .find('[style*="background-image"]')
         ?.attr("style")
-        ?.match(/url\((.*?)\)/)?.[1];
+        ?.match(/url\('?(.*?)\)'?/)?.[1];
 
       result.push({
         url,
