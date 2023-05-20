@@ -18,9 +18,16 @@ module.exports = {
         ?.attr("style")
         ?.match(/url\('?(.*?)\)'?/)?.[1];
 
+      const priceText = $(this).find('[title="prijs"]').text().trim();
+      // get only numbers from text
+      const price = priceText?.includes("-")
+        ? priceText.split("-")[1].match(/\d+/g).map(Number).join("")
+        : null;
+
       result.push({
         url,
         image,
+        price,
       });
     });
 

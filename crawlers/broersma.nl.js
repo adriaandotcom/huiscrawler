@@ -9,7 +9,8 @@ module.exports = {
     const result = [];
 
     for (const property of json.objects) {
-      if (property.status !== "Beschikbaar") continue;
+      const huur = JSON.stringify(property.filters).includes("huur");
+      if (property.status !== "Beschikbaar" || huur) continue;
 
       const zipcode = /(\d{4})\s*([a-z]{2})/i.test(property?.zipcode.trim())
         ? property.zipcode

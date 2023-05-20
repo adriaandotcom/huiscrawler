@@ -182,16 +182,16 @@ async function processResult(db, result, config, fetchFunction) {
     if (!property.zipcode && ai?.zipcode)
       zipRating = getZipcodeRating(ai.zipcode);
 
+    const price = property.price || ai?.price;
+    const size = property.meters || ai?.size;
+    const street = property.street || ai?.street;
+
     const alert =
-      zipRating &&
-      (!property.meters || property.meters >= 59) &&
-      (!property.price || property.price <= 800000);
+      zipRating && (!size || size >= 59) && (!price || price <= 800000);
 
     if (alert) {
       const pricePerMeter =
-        property.price && property.meters
-          ? `€${Math.round(property.price / property.meters)}/m2`
-          : null;
+        price && size ? `€${Math.round(price / size)}/m2` : null;
 
       const floorScore =
         floor === 0 && ai?.garden
@@ -209,10 +209,10 @@ async function processResult(db, result, config, fetchFunction) {
       const line = [
         emojiScore ? `${emoji(emojiScore)} ${emojiScore}/10` : null,
         `📍${zipRating}/10`,
-        property.price ? `€${Math.round(property.price / 1000)}k` : "",
-        property.meters ? `${property.meters}m2` : "",
+        price ? `€${Math.round(price / 1000)}k` : "",
+        size ? `${size}m2` : "",
         pricePerMeter,
-        property.street,
+        street,
         floor ? `🛗 ${floor}` : null,
         ai?.rooms ? `🛏 ${ai.rooms}` : null,
         ai?.servicecosts ? `🧾 €${ai.servicecosts} p/m` : null,
@@ -250,10 +250,10 @@ async function processResult(db, result, config, fetchFunction) {
       property.url,
       property.image,
       floor,
-      property.street || ai?.street || null,
+      street || null,
       zipcode,
-      property.meters || ai?.size || null,
-      property.price || ai?.price || null,
+      size || null,
+      price || null,
       ai?.garden || null,
       ai?.rooftarrace || null,
       ai?.year || null,
