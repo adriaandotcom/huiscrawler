@@ -186,6 +186,17 @@ async function processResult(db, result, config, fetchFunction) {
     const size = property.meters || ai?.size;
     const street = property.street || ai?.street;
 
+    let zipcode = property.zipcode || ai?.zipcode || null;
+    //  When zipcode is 1234ab make it 1234 AB
+    if (typeof zipcode === "string")
+      zipcode = /([0-9]{4})([a-z]{2})/i.test(zipcode?.trim())
+        ? /([0-9]{4})([a-z]{2})/i
+            .exec(zipcode?.trim())
+            .slice(1)
+            .join(" ")
+            .toUpperCase()
+        : zipcode.toUpperCase().trim();
+
     const alert =
       zipRating &&
       (!size || size >= 59) &&
@@ -230,9 +241,9 @@ async function processResult(db, result, config, fetchFunction) {
       ];
 
       // Get map image from Google
-      const city = property._city || "Amsterdam";
-      const address = `${property.street}, ${city}, The Netherlands`;
-      const imageBuffer = await getMapImage({ address });
+      const city = property._city || property.city || ai?.city || "Amsterdam";
+      const address = `${street}, ${city}, The Netherlands`;
+      const imageBuffer = street ? await getMapImage({ address }) : null;
 
       // Send alert to Telegram
       const disable_notification = zipRating <= 5;
@@ -242,9 +253,6 @@ async function processResult(db, result, config, fetchFunction) {
         { disable_notification }
       );
     }
-
-    let zipcode = property.zipcode || ai?.zipcode || null;
-    if (zipcode) zipcode = zipcode.toUpperCase().trim();
 
     stmt.run(
       config.platform,
@@ -312,10 +320,6 @@ async function main() {
     return await page.content();
   });
 
-  console.log(
-    `=> ${new Date().toISOString().slice(0, 16)} Starting crawler...`
-  );
-
   const db = new sqlite3.Database(database, (error) => {
     if (error) console.error(error);
   });
@@ -324,6 +328,12 @@ async function main() {
   const crawlerDir = path.join(__dirname, "crawlers");
   const files = fs.readdirSync(crawlerDir);
   const configFiles = files.filter((file) => file.endsWith(".js"));
+
+  console.log(
+    `=> ${new Date().toISOString().slice(0, 16)} Starting ${
+      configFiles.length
+    } crawlers...`
+  );
 
   for (const configFile of configFiles) {
     const config = require(path.join(crawlerDir, configFile));

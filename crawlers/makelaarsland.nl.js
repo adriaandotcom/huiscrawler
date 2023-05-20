@@ -11,7 +11,7 @@ module.exports = {
 
     $("#propertySearchResults .m-search-result").each(function () {
       const url = $(this)
-        .find('a[href^="https://www.makelaarsland.nl/huis-kopen/"]')
+        .find('a[href^="https://www.makelaarsland.nl/huis-kopen/" i]')
         .attr("href");
 
       const image = $(this)
@@ -19,7 +19,7 @@ module.exports = {
         .first()
         .attr("data-image-src");
 
-      result.push({ url, image });
+      if (url) result.push({ url, image });
     });
 
     return result;
@@ -32,8 +32,8 @@ module.exports = {
 
     const content = [
       $("#houseDetailData").text(),
-      $("#houseDetailDescription").text(),
       $("#houseDetailSpecifications").text(),
+      $("#houseDetailDescription").text(),
     ]
       .filter(Boolean)
       .join("\n");
