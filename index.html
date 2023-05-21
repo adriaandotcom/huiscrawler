@@ -1,8 +1,9 @@
+<!DOCTYPE html>
 <html>
   <head>
     <meta charset="utf-8" />
     <meta name="referrer" content="no-referrer" />
-    <title>Huizen crawler</title>
+    <title>Adriaan's huizen crawler</title>
     <script src="https://unpkg.com/vue@3.2.36/dist/vue.global.js"></script>
     <link
       href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css"
@@ -17,12 +18,13 @@
         max-width: 400px;
         box-shadow: 0px 0 10px 7px #dbdbdb;
         margin: 0 auto;
+        min-height: 100vh;
       }
     </style>
   </head>
   <body>
     <main id="app" class="p-4">
-      <h1 class="text-2xl font-bold">Huizen crawler</h1>
+      <h1 class="text-2xl font-bold">Adriaan's huizen crawler</h1>
 
       <p v-if="error" class="text-red-500">{{ error }}</p>
 
@@ -84,61 +86,83 @@
           </select>
         </div>
 
-        <ul>
-          <li v-for="zipcode in zipcodes">
-            <input
-              type="checkbox"
-              v-model="zipcode.checked"
-              @click="checkChildren(zipcode)"
-            />
-            {{ zipcode.name }}
-            <ul class="ml-4">
-              <li v-for="(child, index) in zipcode.children">
-                <input
-                  type="checkbox"
-                  v-model="child.checked"
-                  :id="'child-'+index"
-                />
-                <label class="ml-1" :for="'child-'+index">
-                  {{ child.name }}
-                </label>
-              </li>
-            </ul>
-          </li>
-        </ul>
+        <details>
+          <summary class="text-gray-600 cursor-pointer">
+            Zipcodes
+            <span class="italic" v-if="selectedZipcodes.length"
+              >({{selectedZipcodes.length}} selected)</span
+            >
+            <span class="italic" v-else>(all selected)</span>
+          </summary>
+
+          <ul class="mt-2">
+            <li v-for="zipcode in zipcodes">
+              <details>
+                <summary>
+                  <input
+                    type="checkbox"
+                    v-model="zipcode.checked"
+                    @click="checkChildren(zipcode)"
+                  />
+                  {{ zipcode.name }}
+                </summary>
+                <ul class="ml-4">
+                  <li v-for="(child, index) in zipcode.children">
+                    <input
+                      type="checkbox"
+                      v-model="child.checked"
+                      :id="index+zipcode.name"
+                    />
+                    <label class="ml-1" :for="index+zipcode.name">
+                      {{ child.name }}
+                    </label>
+                  </li>
+                </ul>
+              </details>
+            </li>
+          </ul>
+        </details>
 
         <p v-if="!filteredProperties.length" class="text-gray-600">
           No properties found.
         </p>
-        <ul v-else class="divide-y divide-gray-300">
-          <li
-            v-for="property of filteredProperties"
-            :key="property.id"
-            class="py-4"
-          >
-            <div class="space-y-2">
-              <h2 class="text-xl font-semibold">
-                {{ property.street }}
-                <small class="text-normal font-normal">
-                  <a :href="property.url" class="text-red-500"
-                    >{{getHostname(property.url)}}</a
-                  ></small
-                >
-              </h2>
-              <p class="text-gray-600">
-                {{ property.zipcode }} &middot; {{formatPrice( property.price)
-                }} &middot; {{ property.meters }}m<sup>2</sup>
-              </p>
-              <a :href="property.url" class="block">
-                <img
-                  :src="property.image"
-                  class="w-full rounded"
-                  alt="Property Image"
-                />
-              </a>
-            </div>
-          </li>
-        </ul>
+        <div v-else>
+          <p>
+            {{filteredProperties.length}}
+            <span v-if="filteredProperties.length === 1">property</span>
+            <span v-else>properties</span>
+            found.
+          </p>
+          <ul class="divide-y divide-gray-300">
+            <li
+              v-for="property of filteredProperties"
+              :key="property.id"
+              class="py-4"
+            >
+              <div class="space-y-2">
+                <h2 class="text-xl font-semibold">
+                  {{ property.street }}
+                  <small class="text-normal font-normal">
+                    <a :href="property.url" class="text-red-500"
+                      >{{getHostname(property.url)}}</a
+                    ></small
+                  >
+                </h2>
+                <p class="text-gray-600">
+                  {{ property.zipcode }} &middot; {{formatPrice( property.price)
+                  }} &middot; {{ property.size }}m<sup>2</sup>
+                </p>
+                <a :href="property.url" class="block">
+                  <img
+                    :src="property.image"
+                    class="w-full rounded-lg"
+                    alt="Property Image"
+                  />
+                </a>
+              </div>
+            </li>
+          </ul>
+        </div>
       </div>
     </main>
 
@@ -161,75 +185,445 @@
                 children: [
                   {
                     name: "1011: Nieuwmarkt/Lastage: Lastage, Oosterdokseiland, Scheepvaarthuisbuurt, Rapenburg, Uilenburg, Valkenburg, Waterlooplein",
+                    codes: ["1011"],
                     checked: false,
                   },
                   {
                     name: "1012: Burgwallen (Oudezijde en Nieuwezijde), Kop Zeedijk",
+                    codes: ["1012"],
                     checked: false,
                   },
                   {
                     name: "1013: Haarlemmerbuurt, Westelijke Eilanden, Zeeheldenbuurt, Spaarndammerbuurt, Houthaven, Minervahaven, Mercuriushaven, Vlothaven, Coenhaven",
+                    codes: ["1013"],
                     checked: false,
                   },
                   {
                     name: "1014: Alfa-driehoek, Kabelweg, Transformatorweg, Isolatorweg, Sloterdijk (dorp), Westergasfabriek",
+                    codes: ["1014"],
                     checked: false,
                   },
                   {
                     name: "1015: Noordwestelijke Grachtengordel, Noord-Jordaan, Marnixplein",
+                    codes: ["1015"],
                     checked: false,
                   },
                   {
                     name: "1016: Westelijke Grachtengordel, Zuid-Jordaan, Raamplein",
+                    codes: ["1016"],
                     checked: false,
                   },
                   {
                     name: "1017: Zuidelijke Grachtengordel, Leidsebuurt, Weteringschans, Frederiksplein, Rembrandtplein",
+                    codes: ["1017"],
                     checked: false,
                   },
                   {
                     name: "1018: Weesperbuurt, Plantage, Sarphatistraat, Kadijken, Oostelijke Eilanden, Czaar Peterbuurt",
+                    codes: ["1018"],
                     checked: false,
                   },
                 ],
               },
               {
                 name: "1019: Oostelijk Havengebied (Amsterdam-Oost)",
+                codes: ["1019"],
                 checked: false,
                 children: [],
               },
               {
-                name: "1020-1039: Amsterdam-Noord",
+                name: "1020-1029: Amsterdam-Noord",
                 checked: false,
                 children: [
                   {
                     name: "1020-1028: Amsterdam-Noord (ten oosten van het Noordhollandsch Kanaal)",
+                    codes: [
+                      "1020",
+                      "1021",
+                      "1022",
+                      "1023",
+                      "1024",
+                      "1025",
+                      "1026",
+                      "1027",
+                      "1028",
+                    ],
                     checked: false,
                   },
-                  { name: "1021: Vogelbuurt, Vogeldorp", checked: false },
-                  { name: "1022: Nieuwendam", checked: false },
+                  {
+                    name: "1021: Vogelbuurt, Vogeldorp",
+                    codes: ["1021"],
+                    checked: false,
+                  },
+                  { name: "1022: Nieuwendam", codes: ["1022"], checked: false },
                   {
                     name: "1023: Tuindorp Nieuwendam, Schellingwoude",
+                    codes: ["1023"],
                     checked: false,
                   },
                   {
                     name: "1024: Nieuwendam-Noord, Waterlandpleinbuurt",
+                    codes: ["1024"],
                     checked: false,
                   },
                   {
                     name: "1025: Tuindorp Buiksloot, Buikslotermeer",
+                    codes: ["1025"],
                     checked: false,
                   },
                   {
                     name: "1026: Durgerdam (gemeente Amsterdam)",
+                    codes: ["1026"],
                     checked: false,
                   },
                   {
                     name: "1027: Zunderdorp (gemeente Amsterdam)",
+                    codes: ["1027"],
                     checked: false,
                   },
                   {
                     name: "1028: Holysloot, Ransdorp (gemeente Amsterdam)",
+                    codes: ["1028"],
+                    checked: false,
+                  },
+                ],
+              },
+              {
+                name: "1030-1039: Amsterdam-Noord (ten westen van het Noordhollandsch Kanaal)",
+                checked: false,
+                children: [
+                  {
+                    name: "1031: Van der Pekbuurt, Overhoeks",
+                    codes: ["1031"],
+                    checked: false,
+                  },
+                  {
+                    name: "1032: Bloemenbuurt, Floradorp, Buiksloterham",
+                    codes: ["1032"],
+                    checked: false,
+                  },
+                  {
+                    name: "1033: Tuindorp Oostzaan",
+                    codes: ["1033"],
+                    checked: false,
+                  },
+                  {
+                    name: "1034: Buiksloot, Banne Buiksloot",
+                    codes: ["1034"],
+                    checked: false,
+                  },
+                  {
+                    name: "1035: Molenwijk, Kadoelen, Oostzanerwerf",
+                    codes: ["1035"],
+                    checked: false,
+                  },
+                  {
+                    name: "1036: Tuindorp Oostzaan",
+                    codes: ["1036"],
+                    checked: false,
+                  },
+                  {
+                    name: "1037: Oostzanerwerf",
+                    codes: ["1037"],
+                    checked: false,
+                  },
+                ],
+              },
+              {
+                name: "1040-1049: Amsterdam Westpoort",
+                checked: false,
+                children: [
+                  {
+                    name: "1041: Petroleumhaven, Centrale Hemweg",
+                    codes: ["1041"],
+                    checked: false,
+                  },
+                  {
+                    name: "1042-1044: Teleport, Westhaven, Basisweg, Radarweg, Spieringhorn",
+                    codes: ["1042", "1043", "1044"],
+                    checked: false,
+                  },
+                  {
+                    name: "1045-1046: Australiëhaven(weg), Abberdaan, Amsterdam Heliport",
+                    codes: ["1045", "1046"],
+                    checked: false,
+                  },
+                  {
+                    name: "1047: Afrikahaven, Ruigoord",
+                    codes: ["1047"],
+                    checked: false,
+                  },
+                ],
+              },
+              {
+                name: "1050-1059: Amsterdam-West",
+                checked: false,
+                children: [
+                  {
+                    name: "1051: Staatsliedenbuurt, Waterwijk, Centrale Markthallen, Kop van Jut",
+                    codes: ["1051"],
+                    checked: false,
+                  },
+                  {
+                    name: "1052: Frederik Hendrikbuurt, Bilderdijkpark",
+                    codes: ["1052"],
+                    checked: false,
+                  },
+                  {
+                    name: "1053: Kinkerbuurt, Bellamybuurt, Borgerbuurt",
+                    codes: ["1053"],
+                    checked: false,
+                  },
+                  {
+                    name: "1054: Overtoombuurt, Helmersbuurt",
+                    codes: ["1054"],
+                    checked: false,
+                  },
+                  {
+                    name: "1055: Bos en Lommer, Landlust",
+                    codes: ["1055"],
+                    checked: false,
+                  },
+                  {
+                    name: "1056: gebied tussen Westelijk Marktkanaal, Erasmusgracht, Einsteinweg / Ringweg A10 en Jan Evertsenstraat, waaronder Trompbuurt",
+                    codes: ["1056"],
+                    checked: false,
+                  },
+                  {
+                    name: "1057: gebied tussen Jan Evertsenstraat, Kostverlorenvaart, Postjeswetering en Einsteinweg / Ringweg A10, waaronder Chassébuurt",
+                    codes: ["1057"],
+                    checked: false,
+                  },
+                  {
+                    name: "1058: gebied tussen Postjeswetering, Kostverlorenvaart, Schinkel, Hoofddorpplein en Einsteinweg, waaronder Postjesbuurt, Surinameplein en Andreas Ensemble (gedeelte in stadsdeel Zuid)",
+                    codes: ["1058"],
+                    checked: false,
+                  },
+                  {
+                    name: "1059: gebied tussen Schinkel, Einsteinweg, Heemstedestraat en Hoofddorpweg, waaronder Aalsmeerweg, Industriegebied Schinkel en Jaagpad (merendeel in stadsdeel Zuid)",
+                    codes: ["1059"],
+                    checked: false,
+                  },
+                ],
+              },
+              {
+                name: "1060-1069: Amsterdam Nieuw-West",
+                checked: false,
+                children: [
+                  {
+                    name: "1060: Postbussen en deel van De Aker (zie ook 1069)",
+                    codes: ["1060"],
+                    checked: false,
+                  },
+                  {
+                    name: "1061: Kolenkitbuurt (stadsdeel West), Laan van Spartaan (stadsdeel West), Overtoomse Veld-Noord",
+                    codes: ["1061"],
+                    checked: false,
+                  },
+                  {
+                    name: "1062: Overtoomse Veld-Zuid, Koningin Wilhelminaplein, Delflandpleinbuurt",
+                    codes: ["1062"],
+                    checked: false,
+                  },
+                  {
+                    name: "1063: Slotermeer (nno deel)",
+                    codes: ["1063"],
+                    checked: false,
+                  },
+                  {
+                    name: "1064: Slotermeer (zzw deel), Oostoever Sloterplas",
+                    codes: ["1064"],
+                    checked: false,
+                  },
+                  {
+                    name: "1065: Slotervaart",
+                    codes: ["1065"],
+                    checked: false,
+                  },
+                  {
+                    name: "1066: Slotervaart (zuidelijk deel), Nieuw Sloten, Dorp Sloten",
+                    codes: ["1066"],
+                    checked: false,
+                  },
+                  {
+                    name: "1067: Geuzenveld, Oud Osdorp",
+                    codes: ["1067"],
+                    checked: false,
+                  },
+                  {
+                    name: "1068: Osdorp (oostelijk deel)",
+                    codes: ["1068"],
+                    checked: false,
+                  },
+                  {
+                    name: "1069: Osdorp (westelijk deel), De Aker (gedeelte, zie ook 1060)",
+                    codes: ["1069"],
+                    checked: false,
+                  },
+                ],
+              },
+              {
+                name: "1070-1083: Amsterdam-Zuid",
+                checked: false,
+                children: [
+                  {
+                    name: "1071: Museumkwartier, Concertgebouwbuurt, Duivelseiland",
+                    codes: ["1071"],
+                    checked: false,
+                  },
+                  {
+                    name: "1072-1074: De Pijp",
+                    codes: ["1072", "1073", "1074"],
+                    checked: false,
+                  },
+                  {
+                    name: "1075: Willemspark, Schinkelbuurt, Bertelmanplein",
+                    codes: ["1075"],
+                    checked: false,
+                  },
+                  {
+                    name: "1076: Stadionbuurt, IJsbaanpad, Fred. Roeskestraat",
+                    codes: ["1076"],
+                    checked: false,
+                  },
+                  {
+                    name: "1077: Apollobuurt (Beethovenbuurt), Prinses Irenebuurt",
+                    codes: ["1077"],
+                    checked: false,
+                  },
+                  {
+                    name: "1078-1079: Rivierenbuurt",
+                    codes: ["1078", "1079"],
+                    checked: false,
+                  },
+                  {
+                    name: "1080-1083: Buitenveldert",
+                    codes: ["1080", "1081", "1082", "1083"],
+                    checked: false,
+                  },
+                ],
+              },
+              {
+                name: "1086-1099: Amsterdam-Oost",
+                checked: false,
+                children: [
+                  {
+                    name: "1086-1088: IJburg",
+                    checked: false,
+                    children: [
+                      {
+                        name: "1086: Steigereiland",
+                        codes: ["1086"],
+                        checked: false,
+                      },
+                      {
+                        name: "1087: Haveneiland, Rieteilanden, Diemerpark",
+                        codes: ["1087"],
+                        checked: false,
+                      },
+                    ],
+                  },
+                  {
+                    name: "1091-1093: Oud-Oost: Dapperbuurt, Oosterparkbuurt, Oostpoort, Transvaalbuurt, Weesperzijde",
+                    codes: ["1091", "1092", "1093"],
+                    checked: false,
+                  },
+                  {
+                    name: "1094: Indische Buurt (westelijk deel)",
+                    codes: ["1094"],
+                    checked: false,
+                  },
+                  {
+                    name: "1095: Indische Buurt (oostelijk deel), Zeeburgereiland, Diemerzeedijk",
+                    codes: ["1095"],
+                    checked: false,
+                  },
+                  {
+                    name: "1096: Omval, Overamstel (met noordelijk deel van Amstel Business Park)",
+                    codes: ["1096"],
+                    checked: false,
+                  },
+                  {
+                    name: "1097-1098: Watergraafsmeer",
+                    codes: ["1097", "1098"],
+                    checked: false,
+                  },
+                  {
+                    name: "1099: vervallen per 2014, nu 1114; was bedrijventerrein Amstel II (Overamstel) in Duivendrecht (gemeente Ouder-Amstel)",
+                    codes: ["1099"],
+                    checked: false,
+                  },
+                ],
+              },
+              {
+                name: "1100-1108: Amsterdam-Zuidoost (gemeente Amsterdam)",
+                checked: false,
+                children: [
+                  {
+                    name: "1101: Bullewijk",
+                    codes: ["1101"],
+                    checked: false,
+                  },
+                  {
+                    name: "1102: Bijlmer Centrum D-, F- en H- buurt",
+                    codes: ["1102"],
+                    checked: false,
+                  },
+                  {
+                    name: "1103: Bijlmer Oost E-, G- en K- buurt",
+                    codes: ["1103"],
+                    checked: false,
+                  },
+                  {
+                    name: "1104: Bijlmer Oost E-, G- en K- buurt",
+                    codes: ["1104"],
+                    checked: false,
+                  },
+                  {
+                    name: "1105: Bullewijk, Amstel III",
+                    codes: ["1105"],
+                    checked: false,
+                  },
+                  {
+                    name: "1106-1107: Holendrecht, Reigersbos, Gein",
+                    codes: ["1106", "1107"],
+                    checked: false,
+                  },
+                  {
+                    name: "1108: Nellestein",
+                    codes: ["1108"],
+                    checked: false,
+                  },
+                ],
+              },
+              {
+                name: "1109: Driemond (gemeente Amsterdam)",
+                checked: false,
+                children: [
+                  {
+                    name: "1109: Driemond",
+                    codes: ["1109"],
+                    checked: false,
+                  },
+                ],
+              },
+              {
+                name: "1110-1113: Diemen, Antwoordnummers in Duivendrecht",
+                checked: false,
+                children: [
+                  {
+                    name: "1111: Diemen-Centrum, Oud-Diemen, Diemen-Noord (westelijk deel), Over-Diemen",
+                    codes: ["1111"],
+                    checked: false,
+                  },
+                  {
+                    name: "1112: Diemen-Zuid, Sniep, Stammerdijk",
+                    codes: ["1112"],
+                    checked: false,
+                  },
+                  {
+                    name: "1113: Diemen-Noord (oostelijk deel)",
+                    codes: ["1113"],
                     checked: false,
                   },
                 ],
@@ -262,6 +656,9 @@
               "size",
               `${this.sizeStart}-${this.sizeEnd || "unlimited"}`
             );
+            if (this.selectedZipcodes.length)
+              search.set("zipcodes", this.selectedZipcodes.join(","));
+            else search.delete("zipcodes");
 
             window.history.replaceState({}, "", `?${search.toString()}`);
             localStorage.setItem("search", `?${search.toString()}`);
@@ -277,10 +674,23 @@
             return this.properties.filter((property) => {
               if (this.priceStart >= this.priceEnd) return false;
 
-              return (
+              const withinPriceRange =
                 property.price >= this.priceStart &&
-                property.price <= this.priceEnd
-              );
+                property.price <= this.priceEnd;
+
+              const withinSizeRange =
+                property.size >= this.sizeStart &&
+                (this.sizeEnd ? property.size <= this.sizeEnd : true);
+
+              if (this.selectedZipcodes.length) {
+                const zipcode = property.zipcode
+                  ? property.zipcode.slice(0, 4)
+                  : null;
+                const withinZipcode = this.selectedZipcodes.includes(zipcode);
+                return withinPriceRange && withinSizeRange && withinZipcode;
+              }
+
+              return withinPriceRange && withinSizeRange;
             });
           },
           priceStartOptions() {
@@ -315,6 +725,20 @@
             sizes.sort((a, b) => a - b);
             return sizes;
           },
+          selectedZipcodes() {
+            const selected = [];
+
+            for (const zipcode of this.zipcodes) {
+              if (zipcode.checked && zipcode.codes)
+                selected.push(...zipcode.codes);
+
+              for (const child of zipcode.children) {
+                if (child.checked && child.codes) selected.push(...child.codes);
+              }
+            }
+
+            return selected;
+          },
         },
         watch: {
           priceStart() {
@@ -329,6 +753,9 @@
           sizeEnd() {
             this.updateUrl();
           },
+          selectedZipcodes() {
+            this.updateUrl();
+          },
         },
         mounted() {
           let search = window.location.search;
@@ -336,15 +763,31 @@
           if ((!search || search === "?") && stored) search = stored;
 
           const urlParams = new URLSearchParams(search);
+
           const price = urlParams.get("price");
           const [from, to] = urlParams.get("price")?.split("-") || [];
           if (from) this.priceStart = parseInt(from);
           if (to) this.priceEnd = parseInt(to);
+
           const size = urlParams.get("size");
           const [sizeFrom, sizeTo] = urlParams.get("size")?.split("-") || [];
           if (sizeFrom) this.sizeStart = parseInt(sizeFrom);
           if (sizeTo === "unlimited") this.sizeEnd = null;
           else if (sizeTo) this.sizeEnd = parseInt(sizeTo);
+
+          const selectedZipcodes = urlParams.get("zipcodes")?.split(",") || [];
+          for (const zipcode of this.zipcodes) {
+            const found = zipcode.codes?.some((code) =>
+              selectedZipcodes.includes(code)
+            );
+            if (found) zipcode.checked = true;
+            for (const child of zipcode.children) {
+              const foundChild = child.codes?.some((code) =>
+                selectedZipcodes.includes(code)
+              );
+              if (foundChild) child.checked = true;
+            }
+          }
         },
       }).mount("#app");
     </script>

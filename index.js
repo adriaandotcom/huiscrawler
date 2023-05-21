@@ -440,6 +440,15 @@ async function main() {
 const server = http.createServer(async (req, res) => {
   res.writeHead(200, { "Content-Type": "text/html" });
 
+  const url = new URL(req.url, `http://${req.headers.host}`);
+
+  // If path is not / then return 404 with message
+  if (url.pathname !== "/") {
+    res.statusCode = 404;
+    res.end("Bummer, not found.");
+    return;
+  }
+
   const db = new sqlite3.Database(database, (error) => {
     if (error) {
       console.error(error);
@@ -448,7 +457,15 @@ const server = http.createServer(async (req, res) => {
   });
 
   const template = fs.readFileSync(path.join(__dirname, "index.html"), "utf8");
-  const fields = ["id", "url", "image", "zipcode", "street", "price", "meters"];
+  const fields = [
+    "id",
+    "url",
+    "image",
+    "zipcode",
+    "street",
+    "price",
+    "meters AS size",
+  ];
   const query = `SELECT ${fields.join(
     ", "
   )} FROM properties ORDER BY id DESC LIMIT 1000`;
