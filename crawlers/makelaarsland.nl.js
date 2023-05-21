@@ -3,7 +3,7 @@ const { parseProperties } = require("../lib/chatgpt");
 const { getZipCode } = require("../lib/google");
 
 module.exports = {
-  note: "Makelaar gevonden 19 mei tijdens rondje lopen",
+  note: "Makelaar gevonden 19 mei 🚶🏽‍♀️",
   targetUrl:
     "https://www.makelaarsland.nl/huis-kopen/?_q=Amsterdam&min=&max=900000&verkocht=ja&sort=datum",
 

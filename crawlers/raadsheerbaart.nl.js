@@ -2,7 +2,7 @@ const cheerio = require("cheerio");
 const { parseProperties } = require("../lib/chatgpt");
 
 module.exports = {
-  note: "Makelaar gevonden 20 mei tijdens rondje lopen",
+  note: "Makelaar gevonden 20 mei 🚶🏽‍♀️",
   targetUrl:
     "https://www.raadsheerbaart.nl/aanbod/woningaanbod/AMSTERDAM/koop/",
 

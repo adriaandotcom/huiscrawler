@@ -2,7 +2,7 @@ const cheerio = require("cheerio");
 const { parseProperties } = require("../lib/chatgpt");
 
 module.exports = {
-  note: "Makelaar gevonden 19 mei tijdens rondje lopen",
+  note: "Makelaar gevonden 19 mei 🚶🏽‍♀️",
   targetUrl: "https://www.scholten.nl/woningaanbod/",
 
   parseHTML: function ($) {
