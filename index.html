@@ -13,12 +13,31 @@
     <style>
       body {
         font-family: sans-serif;
+        background-color: #f5f8f9;
       }
       main {
         max-width: 400px;
         box-shadow: 0px 0 10px 7px #dbdbdb;
         margin: 0 auto;
         min-height: 100vh;
+        background-color: #ffffff;
+      }
+      /* Add dark mode */
+      @media (prefers-color-scheme: dark) {
+        body {
+          background-color: #1f2937;
+        }
+        main {
+          box-shadow: 0px 0 10px 7px #222a37;
+          background-color: #374151;
+          color: white;
+        }
+        .text-gray-600 {
+          color: #d1d5db;
+        }
+        select {
+          color: #374151;
+        }
       }
     </style>
   </head>
