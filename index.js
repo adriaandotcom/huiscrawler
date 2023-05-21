@@ -447,17 +447,11 @@ const server = http.createServer(async (req, res) => {
     }
   });
 
-  const template = fs.readFileSync(path.join(__dirname, "index.html"), "utf8");]
-  const fields = [
-    "id",
-    "url",
-    "image",
-    "zipcode",
-    "street",
-    "price",
-    "meters",
-  ]
-  const query = `SELECT ${fields.join(', ')} FROM properties ORDER BY id DESC LIMIT 1000`;
+  const template = fs.readFileSync(path.join(__dirname, "index.html"), "utf8");
+  const fields = ["id", "url", "image", "zipcode", "street", "price", "meters"];
+  const query = `SELECT ${fields.join(
+    ", "
+  )} FROM properties ORDER BY id DESC LIMIT 1000`;
 
   db.all(query, [], (error, properties) => {
     const data = {};
@@ -474,6 +468,10 @@ const server = http.createServer(async (req, res) => {
   });
 });
 
-server.listen(PORT, () => {
-  console.log(`Server running at http://localhost:${PORT}/`);
-});
+if (PORT) {
+  server.listen(PORT, () => {
+    console.log(`Server running at http://localhost:${PORT}/`);
+  });
+} else {
+  console.log("No port specified, skipping server");
+}
