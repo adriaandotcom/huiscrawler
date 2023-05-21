@@ -437,7 +437,6 @@ async function main() {
 })();
 
 // Setup server returning the latest results in html
-
 const server = http.createServer(async (req, res) => {
   res.writeHead(200, { "Content-Type": "text/html" });
 
@@ -448,8 +447,17 @@ const server = http.createServer(async (req, res) => {
     }
   });
 
-  const template = fs.readFileSync(path.join(__dirname, "index.html"), "utf8");
-  const query = `SELECT * FROM properties ORDER BY id DESC LIMIT 10`;
+  const template = fs.readFileSync(path.join(__dirname, "index.html"), "utf8");]
+  const fields = [
+    "id",
+    "url",
+    "image",
+    "zipcode",
+    "street",
+    "price",
+    "meters",
+  ]
+  const query = `SELECT ${fields.join(', ')} FROM properties ORDER BY id DESC LIMIT 1000`;
 
   db.all(query, [], (error, properties) => {
     const data = {};

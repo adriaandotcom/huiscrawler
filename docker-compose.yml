@@ -15,5 +15,8 @@ services:
       GOOGLE_MAPS_API_KEY: "${GOOGLE_MAPS_API_KEY}"
       OPENAI_API_KEY: "${OPENAI_API_KEY}"
       PROMPT: "${PROMPT}"
+      PORT: "${PORT:-3008}"
+    ports:
+      - "127.0.0.1:${PORT:-3008}:${PORT:-3008}"
     volumes:
       - /home/adriaan/huiscrawler:/data
