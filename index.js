@@ -353,7 +353,11 @@ async function main() {
     config.platform = config.platform || configFile.replace(".js", "");
 
     // Skip other than FILTER_PLATFORM crawlers
-    if (FILTER_PLATFORM && config.platform !== FILTER_PLATFORM) continue;
+    const skipOtherPlatforms =
+      FILTER_PLATFORM && config.platform !== FILTER_PLATFORM;
+
+    if (skipOtherPlatforms) continue;
+    if (config.enabled === false && NODE_ENV === "production") continue;
 
     console.log(`=> Crawling ${config.platform}...`);
 
