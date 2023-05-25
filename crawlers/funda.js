@@ -76,7 +76,6 @@ module.exports = {
     $(".advertisement").remove();
 
     const content = $(".object-primary").text();
-    const properties = await parseProperties(content);
-    return properties;
+    return parseProperties(content);
   },
 };

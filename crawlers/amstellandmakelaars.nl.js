@@ -33,15 +33,13 @@ module.exports = {
     const html = await page.text();
     const $ = cheerio.load(html);
 
-    const contents = [
+    const content = [
       $(".obj_address")?.text()?.trim(),
       $(".object_price")?.text()?.trim(),
       $("#nav-features")?.text()?.trim(),
       $(".description")?.text()?.trim(),
-    ]
-      .filter(Boolean)
-      .join("\n");
+    ];
 
-    return parseProperties(contents);
+    return parseProperties(content);
   },
 };

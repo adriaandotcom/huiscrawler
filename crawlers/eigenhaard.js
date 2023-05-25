@@ -52,27 +52,13 @@ module.exports = {
     return result;
   },
 
-  enrichCallback: async function (result) {
-    if (result.zipcode) return result;
-
-    const address = `${result.street}, ${result._city}, Netherlands`;
-    const zip = await getZipCode(address);
-    result.zipcode = zip;
-
-    return result;
-  },
-
   getAIProperties: async function (fetchWithCookies, result) {
     const page = await fetchWithCookies(result.url);
     const html = await page.text();
     const $ = cheerio.load(html);
 
-    const contents = [$("#content .container")?.text()?.trim()].filter(Boolean);
+    const content = $("#content .container")?.text()?.trim();
 
-    if (contents.length === 0) return null;
-
-    const properties = await parseProperties(contents.join(" \n "));
-
-    return properties;
+    return parseProperties(content);
   },
 };

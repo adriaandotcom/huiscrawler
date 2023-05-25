@@ -54,7 +54,7 @@ module.exports = {
       options
     );
     const json = await response.json();
-    const description = json.result.description;
-    return await parseProperties(description);
+    const description = json.result?.description;
+    return parseProperties(description);
   },
 };

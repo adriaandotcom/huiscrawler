@@ -49,7 +49,6 @@ module.exports = {
       }
     }
 
-    const properties = await parseProperties(JSON.stringify(json));
-    return properties;
+    return parseProperties(JSON.stringify(json));
   },
 };

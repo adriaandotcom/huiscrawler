@@ -42,16 +42,6 @@ module.exports = {
     return result;
   },
 
-  enrichCallback: async function (result) {
-    if (result.zipcode) return result;
-
-    const address = `${result.street}, ${result._city}, Netherlands`;
-    const zip = await getZipCode(address);
-    result.zipcode = zip;
-
-    return result;
-  },
-
   getAIProperties: async function (fetchWithCookies, result) {
     const url = result.url.replace(/\/$/, "") + /omschrijving/;
 
@@ -59,15 +49,11 @@ module.exports = {
     const html = await page.text();
     const $ = cheerio.load(html);
 
-    const contents = [
+    const content = [
       $("#meta .data")?.text()?.trim(),
       $(".view_content")?.text()?.trim(),
-    ].filter((c) => c);
+    ];
 
-    if (contents.length === 0) return null;
-
-    const properties = await parseProperties(contents.join(" \n "));
-
-    return properties;
+    return parseProperties(content);
   },
 };

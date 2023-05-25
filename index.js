@@ -7,7 +7,7 @@ const { zipcodes } = require("./lib/constants");
 const fs = require("fs");
 const path = require("path");
 const { sendTelegramAlert } = require("./lib/telegram");
-const { getMapImage } = require("./lib/google");
+const { getMapImage, getZipCode } = require("./lib/google");
 
 const { Cluster } = require("puppeteer-cluster");
 const vanillaPuppeteer = require("puppeteer");
@@ -143,32 +143,25 @@ async function processResult(db, result, config, fetchFunction) {
 
     if (row) continue;
 
-    // Run enrichCallback if it exists
-    if (config.enrichCallback) {
-      try {
-        property = await config.enrichCallback(property, fetchFunction);
-      } catch (error) {
-        console.error(error);
-      }
+    try {
+      const enrichCallback =
+        config.enrichCallback ||
+        async function (result) {
+          if (result.zipcode) return result;
+
+          const address = `${result.street}, ${
+            result.city || result._city
+          }, Netherlands`;
+          const zip = await getZipCode(address);
+          result.zipcode = zip;
+
+          return result;
+        };
+
+      property = await enrichCallback(property, fetchFunction);
+    } catch (error) {
+      console.error(error);
     }
-
-    // Get apendix of property.street, like --3 should return 3, -H should return H, etc.
-    const appendix = property.street
-      ?.match(/[0-9]+[- ]+([1-9]|h|hs|i+)$/i)?.[1]
-      ?.toLowerCase();
-
-    const floor =
-      property.floor === "begane grond"
-        ? 0
-        : /^[0-9]+$/.test(property.floor)
-        ? parseInt(property.floor)
-        : /^[0-9]+$/.test(appendix)
-        ? parseInt(appendix)
-        : appendix === "h" || appendix === "hs"
-        ? 0
-        : /^i+$/i.test(appendix)
-        ? appendix.length
-        : null;
 
     // Check if the zipcode is in your list
     let zipRating = getZipcodeRating(property.zipcode);
@@ -185,12 +178,37 @@ async function processResult(db, result, config, fetchFunction) {
       console.error(error);
     }
 
-    if (!property.zipcode && ai?.zipcode)
-      zipRating = getZipcodeRating(ai.zipcode);
-
+    const useFloor = property.floor || ai?.floor;
     const price = property.price || ai?.price;
     const size = property.meters || ai?.size;
+
+    // Get apendix of property.street, like --3 should return 3, -H should return H, etc.
     const street = property.street || ai?.street;
+    const appendix = street
+      ?.match(/[0-9]+[- ]+([1-9]|a|b|h|hs|i+)$/i)?.[1]
+      ?.toLowerCase();
+
+    const floor =
+      useFloor === "begane grond"
+        ? 0
+        : Number.isInteger(useFloor) && useFloor >= 0
+        ? useFloor
+        : /^[0-9]+$/.test(useFloor)
+        ? parseInt(useFloor)
+        : /^[0-9]+$/.test(appendix)
+        ? parseInt(appendix)
+        : appendix === "h" || appendix === "hs" || /hs$/i.test(street?.trim())
+        ? 0
+        : appendix === "a"
+        ? 0
+        : appendix === "b"
+        ? 1
+        : /^i+$/i.test(appendix)
+        ? appendix.length
+        : null;
+
+    if (!property.zipcode && ai?.zipcode)
+      zipRating = getZipcodeRating(ai.zipcode);
 
     let zipcode = property.zipcode || ai?.zipcode || null;
     //  When zipcode is 1234ab make it 1234 AB
@@ -203,23 +221,24 @@ async function processResult(db, result, config, fetchFunction) {
             .toUpperCase()
         : zipcode.toUpperCase().trim();
 
+    const floorScore =
+      floor === 0 && ai?.garden
+        ? 10
+        : ai?.rooftarrace
+        ? 8
+        : floor === 0 || ai?.garden
+        ? 5
+        : 0;
+
     const alert =
+      floorScore &&
       zipRating &&
-      (!size || size >= 59) &&
-      (!price || (price >= 200000 && price <= 800000));
+      (!size || size >= 67) &&
+      (!price || (price >= 300000 && price <= 700000));
 
     if (alert) {
       const pricePerMeter =
         price && size ? `€${Math.round(price / size)}/m2` : null;
-
-      const floorScore =
-        floor === 0 && ai?.garden
-          ? 10
-          : ai?.rooftarrace
-          ? 8
-          : floor === 0 || ai?.garden
-          ? 5
-          : 0;
 
       const sizeScore = size >= 80 ? 10 : size >= 70 ? 8 : size >= 67 ? 5 : 0;
 
@@ -230,6 +249,8 @@ async function processResult(db, result, config, fetchFunction) {
         (zipRating + floorScore * 3 + sizeScore + priceScore) / 6
       );
 
+      const superalert = emojiScore >= 7 && zipRating >= 7 && sizeScore >= 8;
+
       const line = [
         emojiScore ? `${emoji(emojiScore)} ${emojiScore}/10` : null,
         `📍${zipRating}/10`,
@@ -237,7 +258,7 @@ async function processResult(db, result, config, fetchFunction) {
         size ? `${size}m2` : "",
         pricePerMeter,
         street,
-        floor ? `🛗 ${floor}` : null,
+        typeof floor === "number" ? `🛗 ${floor}` : null,
         ai?.rooms ? `🛏 ${ai.rooms}` : null,
         ai?.servicecosts ? `🧾 €${ai.servicecosts} p/m` : null,
       ]
@@ -245,10 +266,9 @@ async function processResult(db, result, config, fetchFunction) {
         .join(" · ");
 
       const lines = [
-        emojiScore >= 7 ? `🚨🚨🚨 Might be a good property!` : "",
+        superalert ? `🚨🚨🚨 Might be a good property!` : "",
         line,
         `[${property.url}](${property.url})`,
-        !floorScore ? `*No garden or rooftop terrace*` : null,
         ai?.reason ? `_${ai.reason}_` : null,
         config.note ? `🔍 ${config.note}` : null,
       ];

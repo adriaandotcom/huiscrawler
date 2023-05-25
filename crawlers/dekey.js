@@ -49,16 +49,12 @@ module.exports = {
     const html = await page.text();
     const $ = cheerio.load(html);
 
-    const contents = [
+    const content = [
       $("#overview")?.text()?.trim(),
       $(".contentsmall")?.text()?.trim(),
       $("aside#features")?.text()?.trim(),
     ];
 
-    if (contents.length === 0) return null;
-
-    const properties = await parseProperties(contents.join(" \n "));
-
-    return properties;
+    return parseProperties(content);
   },
 };

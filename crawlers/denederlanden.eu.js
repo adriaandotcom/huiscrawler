@@ -40,17 +40,19 @@ module.exports = {
       $(".house-info").text(),
       $(".house-overview__description").text(),
       $(".house-overview__features").text(),
-    ]
-      .filter(Boolean)
-      .join("\n");
+    ];
 
     const properties = await parseProperties(content);
+
+    // Add zipcode
     const street = $(".house-info__title").text().trim();
     const city = $(".house-info__city").text().trim();
+
     if (street && city)
       properties.zipcode = await getZipCode(
         `${street}, ${city}, The Netherlands`
       );
+
     return properties;
   },
 };

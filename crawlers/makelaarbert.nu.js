@@ -34,14 +34,8 @@ module.exports = {
       $("article header").text(),
       $(".summary").text(),
       $(".property-information").text(),
-    ]
-      .filter(Boolean)
-      .join("\n");
+    ];
 
-    if (!content) return null;
-
-    const properties = await parseProperties(content);
-
-    return properties;
+    return parseProperties(content);
   },
 };

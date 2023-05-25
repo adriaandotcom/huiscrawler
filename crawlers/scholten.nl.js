@@ -31,15 +31,11 @@ module.exports = {
     const html = await page.text();
     const $ = cheerio.load(html);
 
-    const contents = [
+    const content = [
       $('section[id="informatie"]')?.text()?.trim(),
       $('section[id="kenmerken"]')?.text()?.trim(),
-    ].filter((c) => c);
+    ];
 
-    if (contents.length === 0) return null;
-
-    const properties = await parseProperties(contents.join(" \n "));
-
-    return properties;
+    return parseProperties(content);
   },
 };

@@ -62,7 +62,7 @@ module.exports = {
       $(".details").text(),
       $(".main-features").text(),
       $(".description").text(),
-    ].join("\n");
+    ];
 
     return parseProperties(content);
   },

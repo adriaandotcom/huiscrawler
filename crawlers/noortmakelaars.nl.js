@@ -1,7 +1,6 @@
 const cheerio = require("cheerio");
 const { parseProperties } = require("../lib/chatgpt");
 const { parsePrice, parseSize } = require("../lib/helpers");
-const { getZipCode } = require("../lib/google");
 
 module.exports = {
   note: "Makelaar gevonden 20 mei 🚶🏽‍♀️",
@@ -48,18 +47,6 @@ module.exports = {
           city: "Amsterdam",
         });
     });
-
-    return result;
-  },
-
-  enrichCallback: async function (result) {
-    if (result.zipcode) return result;
-
-    const address = `${result.street}, ${
-      result.city || "Amsterdam"
-    }, Netherlands`;
-
-    result.zipcode = await getZipCode(address);
 
     return result;
   },

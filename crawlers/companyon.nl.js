@@ -36,14 +36,8 @@ module.exports = {
       $(".addressInfo").text(),
       $("#Kenmerken").text(),
       $("#Omschrijving").text(),
-    ]
-      .filter(Boolean)
-      .join("\n");
+    ];
 
-    if (!content) return null;
-
-    const properties = await parseProperties(content);
-
-    return properties;
+    return parseProperties(content);
   },
 };

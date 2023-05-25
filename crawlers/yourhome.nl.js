@@ -32,15 +32,14 @@ module.exports = {
     const html = await page.text();
     const $ = cheerio.load(html);
 
-    const content = [$(".detail").text(), $(".characteristics").text()]
-      .filter(Boolean)
-      .join("\n");
-
-    const street = result.street || $(".detail__title").text();
-    const city = $(".detail__place").text().split("|")[0];
-
+    const content = [$(".detail").text(), $(".characteristics").text()];
     const properties = await parseProperties(content);
 
+    const street =
+      result.street || properties.street || $(".detail__title").text();
+    const city = $(".detail__place").text().split("|")[0];
+
+    // Add zipcode
     properties.zipcode = await getZipCode(
       `${street}, ${city}, The Netherlands`
     );

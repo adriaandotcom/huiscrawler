@@ -34,17 +34,11 @@ module.exports = {
     const html = await page.text();
     const $ = cheerio.load(html);
 
-    let contents = [
+    const content = [
       $(".offer-intro__top")?.text()?.trim(),
       $(".read-more--container")?.text()?.trim(),
     ];
 
-    contents = contents.filter((c) => c);
-
-    if (contents.length === 0) return null;
-
-    const properties = await parseProperties(contents.join(" \n "));
-
-    return properties;
+    return parseProperties(content);
   },
 };

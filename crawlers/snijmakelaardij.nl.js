@@ -32,16 +32,12 @@ module.exports = {
 
     $(".sidebar .top .shortcuts").remove();
 
-    const contents = [
+    const content = [
       $(".sidebar .top")?.text()?.trim(),
       $(".description")?.text()?.trim(),
       $(".specs")?.text()?.trim(),
-    ].filter((c) => c);
+    ];
 
-    if (!contents.length) return null;
-
-    const properties = await parseProperties(contents.join(" \n "));
-
-    return properties;
+    return parseProperties(content);
   },
 };

@@ -35,11 +35,11 @@ module.exports = {
       $("#houseDetailData").text(),
       $("#houseDetailSpecifications").text(),
       $("#houseDetailDescription").text(),
-    ]
-      .filter(Boolean)
-      .join("\n");
+    ];
 
     const properties = await parseProperties(content);
+
+    // Add zipcode
     const address = $(".m-house-detail-data__address").text().trim();
     if (address)
       properties.zipcode = await getZipCode(`${address}, The Netherlands`);

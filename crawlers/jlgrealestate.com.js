@@ -33,9 +33,7 @@ module.exports = {
       $(".woning__header").text(),
       $("section#characteristics").text(),
       $("section#description").text(),
-    ]
-      .filter(Boolean)
-      .join("\n");
+    ];
 
     return parseProperties(content);
   },

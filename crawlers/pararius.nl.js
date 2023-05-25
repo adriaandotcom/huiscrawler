@@ -105,7 +105,7 @@ module.exports = {
       $(".page__details--parking").text(),
       $(".page__details--garage").text(),
       $(".listing-detail-description__content").text(),
-    ].join("\n");
+    ];
 
     return parseProperties(content);
   },
