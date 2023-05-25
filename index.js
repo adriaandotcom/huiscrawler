@@ -490,9 +490,16 @@ const server = http.createServer(async (req, res) => {
     "price",
     "meters AS size",
   ];
-  const query = `SELECT ${fields.join(
-    ", "
-  )} FROM properties ORDER BY id DESC LIMIT 1000`;
+  const query = `
+    SELECT ${fields.join(", ")}
+    FROM properties
+    WHERE
+      created_at IS NOT NULL
+      AND zipcode IS NOT NULL
+      AND created_at > strftime('%Y-%m-%dT%H:%M:%S', 'now', '-30 days')
+    ORDER BY created_at DESC
+    LIMIT 1000
+  `;
 
   db.all(query, [], (error, properties) => {
     const data = {};
