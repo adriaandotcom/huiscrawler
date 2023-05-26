@@ -27,16 +27,17 @@ module.exports = {
 
       const base = "https://www.marinavanschaik.nl";
 
-      result.push({
-        url: url ? `${base}${url}` : null,
-        image: image ? `${base}${image}` : null,
-        street,
-        zipcode: null,
-        meters,
-        price,
-        rooms,
-        _city: city || "Amsterdam",
-      });
+      if (url)
+        result.push({
+          url: url ? `${base}${url}` : null,
+          image: image ? `${base}${image}` : null,
+          street,
+          zipcode: null,
+          meters,
+          price,
+          rooms,
+          _city: city || "Amsterdam",
+        });
     });
 
     return result;

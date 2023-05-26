@@ -25,7 +25,7 @@ module.exports = {
 
       const street = $(this).find(".card-property__address").text().trim();
 
-      result.push({ url, image, street });
+      if (url) result.push({ url, image, street });
     });
 
     return result;

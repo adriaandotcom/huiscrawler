@@ -21,7 +21,7 @@ module.exports = {
 
       if (status !== "Beschikbaar") return;
 
-      result.push({ url, image, street });
+      if (url) result.push({ url, image, street });
     });
 
     return result;

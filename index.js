@@ -76,6 +76,8 @@ async function getRow(database, sql, params) {
 }
 
 async function fetchWithCookies(url, options) {
+  if (!url) throw new Error("No url provided in fetchWithCookies");
+
   options = options || {};
   options.headers = options.headers || {};
   options.headers["User-Agent"] = userAgent;
@@ -153,7 +155,7 @@ async function processResult(db, result, config, fetchFunction) {
             result.city || result._city
           }, Netherlands`;
           const zip = await getZipCode(address);
-          result.zipcode = zip;
+          if (zip) result.zipcode = zip;
 
           return result;
         };

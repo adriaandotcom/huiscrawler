@@ -38,15 +38,16 @@ module.exports = {
 
       const base = "https://www.eigenhaard.nl";
 
-      result.push({
-        url: `${base}${url}`,
-        image: `${base}${image}`,
-        street,
-        zipcode: null,
-        meters,
-        price,
-        _city: city || "Amsterdam",
-      });
+      if (url)
+        result.push({
+          url: `${base}${url}`,
+          image: `${base}${image}`,
+          street,
+          zipcode: null,
+          meters,
+          price,
+          _city: city || "Amsterdam",
+        });
     });
 
     return result;

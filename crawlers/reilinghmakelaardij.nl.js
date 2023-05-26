@@ -41,14 +41,15 @@ module.exports = {
         .text()
         .trim();
 
-      result.push({
-        url,
-        floor,
-        image,
-        street,
-        meters,
-        city,
-      });
+      if (url)
+        result.push({
+          url,
+          floor,
+          image,
+          street,
+          meters,
+          city,
+        });
     });
 
     return result;

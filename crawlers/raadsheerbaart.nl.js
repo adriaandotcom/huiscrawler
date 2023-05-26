@@ -10,19 +10,15 @@ module.exports = {
     const result = [];
 
     $("li.aanbodEntry").each(function () {
-      const url =
-        "https://www.raadsheerbaart.nl" +
-        $(this)
-          .find('a[href^="/aanbod/woningaanbod/amsterdam/koop/" i]')
-          .first()
-          .attr("href");
+      const href = $(this)
+        .find('a[href^="/aanbod/woningaanbod/amsterdam/koop/" i]')
+        .first()
+        .attr("href");
+      const url = "https://www.raadsheerbaart.nl" + href;
 
       const image = $(this).find("img.foto_")?.attr("src");
 
-      result.push({
-        url,
-        image,
-      });
+      if (href) result.push({ url, image });
     });
 
     return result;

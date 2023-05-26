@@ -16,10 +16,7 @@ module.exports = {
       const image =
         "https://snijmakelaardij.nl" + $(this).find("img.img")?.attr("src");
 
-      result.push({
-        url,
-        image,
-      });
+      if (url) result.push({ url, image });
     });
 
     return result;

@@ -15,11 +15,12 @@ module.exports = {
 
       const image = $(this).find(".property-box-image img")?.attr("src");
 
-      result.push({
-        url,
-        image,
-        zipcode,
-      });
+      if (url)
+        result.push({
+          url,
+          image,
+          zipcode,
+        });
     });
 
     return result;

@@ -20,14 +20,15 @@ module.exports = {
         ? property.zipcode.trim()
         : null;
 
-      result.push({
-        url: "https://www.damstad.nl" + property.url,
-        image: property.photo,
-        street: property.address,
-        zipcode,
-        meters: property?.livingSurface,
-        price: property.salesPrice,
-      });
+      if (property.url)
+        result.push({
+          url: "https://www.damstad.nl" + property.url,
+          image: property.photo,
+          street: property.address,
+          zipcode,
+          meters: property?.livingSurface,
+          price: property.salesPrice,
+        });
     }
 
     return result;

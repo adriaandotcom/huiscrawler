@@ -34,12 +34,13 @@ module.exports = {
       const street = addressComponents[0];
       const zipcode = addressComponents[1];
 
-      result.push({
-        url: fullUrl,
-        image: fullImageUrl.replace(/dekey_thumb/, "dossier_big_mobile"),
-        street: street,
-        zipcode: zipcode,
-      });
+      if (href)
+        result.push({
+          url: fullUrl,
+          image: fullImageUrl.replace(/dekey_thumb/, "dossier_big_mobile"),
+          street: street,
+          zipcode: zipcode,
+        });
     });
     return result;
   },

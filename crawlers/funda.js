@@ -43,14 +43,15 @@ module.exports = {
           .pop()
           .split(" ")[0];
 
-        result.push({
-          url,
-          image,
-          street,
-          zipcode,
-          meters,
-          price,
-        });
+        if (url)
+          result.push({
+            url,
+            image,
+            street,
+            zipcode,
+            meters,
+            price,
+          });
       }
     );
 

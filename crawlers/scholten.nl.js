@@ -17,10 +17,7 @@ module.exports = {
         ?.attr("style")
         ?.match(/url\('?(.*?)\)'?/)?.[1];
 
-      result.push({
-        url,
-        image,
-      });
+      if (url) result.push({ url, image });
     });
 
     return result;

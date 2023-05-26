@@ -15,10 +15,7 @@ module.exports = {
         // <div class="foto" style="background-image: url('https://images.realworks.nl/servlets/images/media.objectmedia/130635845.jpg?portalid=5312&check=api_sha256%3Acec4b2bad33e7a518bda136927bcc82129afbcc2ac953e7e92cb92f481f8771b&resize=4');">
         const image = $(this).find("img.attachment-portfolio")?.attr("src");
 
-        result.push({
-          url,
-          image,
-        });
+        if (url) result.push({ url, image });
       }
     );
 

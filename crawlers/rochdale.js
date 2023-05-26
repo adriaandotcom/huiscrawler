@@ -14,15 +14,16 @@ module.exports = {
 
       if (fields.status !== "Beschikbaar") continue;
 
-      result.push({
-        url: `https://www.rochdale.nl/kopen#/${fields.unit_path_segment}`,
-        image: fields.list_image,
-        street: fields.name,
-        zipcode: null,
-        meters: fields.total_area,
-        price: fields.selling_price,
-        _raw: property._source.fields,
-      });
+      if (fields.unit_path_segment)
+        result.push({
+          url: `https://www.rochdale.nl/kopen#/${fields.unit_path_segment}`,
+          image: fields.list_image,
+          street: fields.name,
+          zipcode: null,
+          meters: fields.total_area,
+          price: fields.selling_price,
+          _raw: property._source.fields,
+        });
     }
 
     return result;

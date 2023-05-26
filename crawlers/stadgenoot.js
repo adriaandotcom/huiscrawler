@@ -19,14 +19,16 @@ module.exports = {
       )
         continue;
 
-      result.push({
-        url: base + property.Url,
-        image: base + property.ImageUrl.replace(/\?height=190/, "?height=600"),
-        street: property.Title,
-        zipcode: property.ZipCode,
-        meters: property.Area,
-        price: property.Price,
-      });
+      if (property.Url)
+        result.push({
+          url: base + property.Url,
+          image:
+            base + property.ImageUrl.replace(/\?height=190/, "?height=600"),
+          street: property.Title,
+          zipcode: property.ZipCode,
+          meters: property.Area,
+          price: property.Price,
+        });
     }
 
     return result;

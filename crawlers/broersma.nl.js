@@ -16,14 +16,15 @@ module.exports = {
         ? property.zipcode
         : null;
 
-      result.push({
-        url: property.url,
-        image: property.thumbnail_url,
-        street: property.street + " " + property.housenumber,
-        zipcode,
-        meters: property?.oppervlakte,
-        price: property.price,
-      });
+      if (property.url)
+        result.push({
+          url: property.url,
+          image: property.thumbnail_url,
+          street: property.street + " " + property.housenumber,
+          zipcode,
+          meters: property?.oppervlakte,
+          price: property.price,
+        });
     }
 
     return result;

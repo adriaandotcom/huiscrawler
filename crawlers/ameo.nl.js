@@ -25,11 +25,12 @@ module.exports = {
         ? priceText.split("-")[1].match(/\d+/g).map(Number).join("")
         : null;
 
-      result.push({
-        url,
-        image,
-        price,
-      });
+      if (url)
+        result.push({
+          url,
+          image,
+          price,
+        });
     });
 
     return result;

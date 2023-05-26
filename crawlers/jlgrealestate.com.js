@@ -18,7 +18,7 @@ module.exports = {
         .first()
         .attr("data-flickity-lazyload");
 
-      result.push({ url, image });
+      if (url) result.push({ url, image });
     });
 
     return result;

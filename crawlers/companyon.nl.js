@@ -17,10 +17,7 @@ module.exports = {
 
       const image = $(this).find("img.foto_")?.attr("src");
 
-      result.push({
-        url,
-        image,
-      });
+      if (url) result.push({ url, image });
     });
 
     return result;

@@ -22,16 +22,17 @@ module.exports = {
 
       const city = property.url.split("/")[1];
 
-      result.push({
-        url,
-        image: image ? `https://ik-zoek.de-alliantie.nl${image}` : null,
-        street: property.address,
-        zipcode: null,
-        meters: property?.size,
-        price: property.price?.replace(/\D/g, ""),
-        floor: null,
-        _city: city || "Amsterdam",
-      });
+      if (property.url)
+        result.push({
+          url,
+          image: image ? `https://ik-zoek.de-alliantie.nl${image}` : null,
+          street: property.address,
+          zipcode: null,
+          meters: property?.size,
+          price: property.price?.replace(/\D/g, ""),
+          floor: null,
+          _city: city || "Amsterdam",
+        });
     }
 
     return result;
