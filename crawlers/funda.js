@@ -1,11 +1,12 @@
 const cheerio = require("cheerio");
 const { parseProperties } = require("../lib/chatgpt");
+const { log } = require("../lib/helpers");
 
 module.exports = {
   platform: "funda",
   puppeteer: true,
   targetUrl:
-    "https://www.funda.nl/zoeken/koop?selected_area=%5B%22amsterdam%22%5D&price=%22-700000%22&floor_area=%2267-%22&availability=%5B%22available%22%5D&exterior_space_type=%5B%22garden%22%5D&publication_date=%221%22",
+    "https://www.funda.nl/zoeken/koop?selected_area=%5B%22amsterdam%22%5D&price=%22-700000%22&floor_area=%2267-%22&availability=%5B%22available%22%5D&exterior_space_type=%5B%22garden%22%5D&publication_date=%223%22",
 
   parseHTML: function ($) {
     const result = [];
