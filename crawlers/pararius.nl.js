@@ -10,8 +10,6 @@ module.exports = {
   parseHTML: function ($) {
     const result = [];
 
-    console.log({ html: $.html() });
-
     $(".search-list .listing-search-item").each(function () {
       const path = $(this)
         .find('a[href^="/huis-te-koop/amsterdam/"]')
@@ -60,18 +58,6 @@ module.exports = {
           .text()
           .trim()
       );
-
-      console.log({
-        url: `https://www.pararius.nl${path}`,
-        image,
-        street,
-        zipcode,
-        meters: size,
-        price,
-        city,
-        year,
-        rooms,
-      });
 
       if (path)
         result.push({

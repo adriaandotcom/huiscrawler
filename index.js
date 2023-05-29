@@ -13,6 +13,7 @@ const { Cluster } = require("puppeteer-cluster");
 const vanillaPuppeteer = require("puppeteer");
 const { addExtra } = require("puppeteer-extra");
 const Stealth = require("puppeteer-extra-plugin-stealth");
+const { log } = require("./lib/helpers");
 
 const cookieJar = new CookieJar();
 const userAgent =
@@ -162,7 +163,7 @@ async function processResult(db, result, config, fetchFunction) {
 
       property = await enrichCallback(property, fetchFunction);
     } catch (error) {
-      console.error(error);
+      log(error);
     }
 
     // Check if the zipcode is in your list
@@ -177,7 +178,7 @@ async function processResult(db, result, config, fetchFunction) {
     try {
       ai = useAi ? await config.getAIProperties(fetchFunction, property) : null;
     } catch (error) {
-      console.error(error);
+      log(error);
     }
 
     const useFloor = property.floor || ai?.floor;
@@ -307,7 +308,7 @@ async function processResult(db, result, config, fetchFunction) {
       ai?.rating || null,
       ai?.reason || null,
       function (err) {
-        if (err) return console.log(err.message);
+        if (err) return log(err.message);
       }
     );
   }
@@ -356,7 +357,7 @@ async function main() {
   });
 
   const db = new sqlite3.Database(database, (error) => {
-    if (error) console.error(error);
+    if (error) log(error);
   });
 
   // Get all config files
@@ -364,10 +365,10 @@ async function main() {
   const files = fs.readdirSync(crawlerDir);
   const configFiles = files.filter((file) => file.endsWith(".js"));
 
-  console.log(
-    `=> ${new Date().toISOString().slice(0, 16)} Starting${
-      FILTER_PLATFORM ? " 1 of" : ""
-    } ${configFiles.length} crawlers...`
+  log(
+    `Starting${FILTER_PLATFORM ? " 1 of" : ""} ${
+      configFiles.length
+    } crawlers...`
   );
 
   for (const configFile of configFiles) {
@@ -381,7 +382,7 @@ async function main() {
     if (skipOtherPlatforms) continue;
     if (config.enabled === false && NODE_ENV === "production") continue;
 
-    console.log(`=> Crawling ${config.platform}...`);
+    log(`Crawling ${config.platform}...`);
 
     if (!config.parseHTML && !config.parseJSON)
       throw new Error(
@@ -432,7 +433,7 @@ async function main() {
           result = config.parseHTML($);
         }
       } catch (error) {
-        console.error(error);
+        log(error);
       }
     }
 
@@ -455,10 +456,10 @@ async function main() {
   await initDatabase();
 
   // run the main function
-  main().catch(console.error);
+  main().catch(log);
 
   setInterval(() => {
-    main().catch(console.error);
+    main().catch(log);
   }, 30 * 60 * 1000); // 30 minutes in milliseconds
 })();
 
@@ -477,7 +478,7 @@ const server = http.createServer(async (req, res) => {
 
   const db = new sqlite3.Database(database, (error) => {
     if (error) {
-      console.error(error);
+      log(error);
       res.end(error.message);
     }
   });
@@ -520,8 +521,8 @@ const server = http.createServer(async (req, res) => {
 
 if (PORT) {
   server.listen(PORT, () => {
-    console.log(`Server running at http://localhost:${PORT}/`);
+    log(`Server running at http://localhost:${PORT}/`);
   });
 } else {
-  console.log("No port specified, skipping server");
+  log("No port specified, skipping server");
 }
