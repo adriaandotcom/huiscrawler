@@ -237,7 +237,7 @@ async function processResult(db, result, config, fetchFunction) {
       floorScore &&
       zipRating &&
       (!size || size >= 67) &&
-      (!price || (price >= 300000 && price <= 700000));
+      (!price || (price >= 300000 && price <= 650000));
 
     if (alert) {
       const pricePerMeter =
