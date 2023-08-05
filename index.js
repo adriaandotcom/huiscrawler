@@ -233,11 +233,13 @@ async function processResult(db, result, config, fetchFunction) {
         ? 5
         : 0;
 
-    const alert =
-      floorScore &&
-      zipRating &&
-      (!size || size >= 67) &&
-      (!price || (price >= 300000 && price <= 650000));
+    // const alert =
+    //   floorScore &&
+    //   zipRating &&
+    //   (!size || size >= 67) &&
+    //   (!price || (price >= 300000 && price <= 650000));
+
+    const alert = false;
 
     if (alert) {
       const pricePerMeter =
@@ -392,9 +394,13 @@ async function main() {
     let result = [];
 
     if (config.puppeteer) {
-      const html = await cluster.execute({ url: config.targetUrl });
-      const $ = cheerio.load(html);
-      result = config.parseHTML($);
+      try {
+        const html = await cluster.execute({ url: config.targetUrl });
+        const $ = cheerio.load(html);
+        result = config.parseHTML($);
+      } catch (error) {
+        console.error("Cluster failed to execute:", error);
+      }
     } else {
       // Fetch initial page to get PHPSESSID cookie
       if (config.baseUrl) await fetchWithCookies(config.baseUrl);
