@@ -6,28 +6,28 @@ module.exports = {
   note: "Via Dennis van de Hypotheker",
   baseUrl: "https://aanbod.stadgenoot.nl/woningen/koopaanbod/",
   targetUrl:
-    "https://aanbod.stadgenoot.nl/umbraco/WebCit/AanbodApi/GetAanbod?1683663471&init=false&type=wonen&page=1&orderType=date&order=desc&filters=rentOrSale;Koop$price;0,700000$area;60,97",
+    "https://aanbod.stadgenoot.nl/umbraco/api/Aanbod/GetAanbod?1716309499=&init=true&rentOrSale=Koop&type=woning&page=1&orderType=date&order=desc&filters=rentOrSale;Koop",
   parseJSON: function (json) {
     const result = [];
 
     const base = "https://aanbod.stadgenoot.nl";
 
-    for (const property of json.Items) {
+    for (const property of json.items) {
       if (
-        property.Status !== "Te koop" &&
-        property.Status !== "Binnenkort in de verkoop"
+        property.status !== "Te koop" &&
+        property.status !== "Binnenkort in de verkoop"
       )
         continue;
 
-      if (property.Url)
+      if (property.url)
         result.push({
-          url: base + property.Url,
+          url: property.url,
           image:
-            base + property.ImageUrl.replace(/\?height=190/, "?height=600"),
-          street: property.Title,
-          zipcode: property.ZipCode,
-          meters: property.Area,
-          price: property.Price,
+            base + property.imageUrl.replace(/\?height=190/, "?height=600"),
+          street: property.title,
+          zipcode: property.zipCode,
+          meters: property.area,
+          price: property.price,
         });
     }
 
