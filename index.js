@@ -243,10 +243,10 @@ async function processResult(db, result, config, fetchFunction) {
       const pricePerMeter =
         price && size ? `€${Math.round(price / size)}/m2` : null;
 
-      const sizeScore = size >= 80 ? 10 : size >= 70 ? 8 : size >= 67 ? 5 : 0;
+      const sizeScore = size >= 80 ? 10 : size >= 70 ? 8 : size >= 60 ? 5 : 0;
 
       const priceScore =
-        price <= 600000 ? 10 : price <= 700000 ? 8 : price <= 800000 ? 4 : 0;
+        price <= 400000 ? 10 : price <= 500000 ? 8 : price <= 600000 ? 4 : 0;
 
       const emojiScore = Math.round(
         (zipRating + floorScore * 3 + sizeScore + priceScore) / 6
