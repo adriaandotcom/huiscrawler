@@ -233,13 +233,11 @@ async function processResult(db, result, config, fetchFunction) {
         ? 5
         : 0;
 
-    // const alert =
-    //   floorScore &&
-    //   zipRating &&
-    //   (!size || size >= 67) &&
-    //   (!price || (price >= 300000 && price <= 650000));
-
-    const alert = false;
+    const alert =
+      floorScore &&
+      zipRating &&
+      (!size || size >= 60) &&
+      (!price || (price >= 300_000 && price <= 500_000));
 
     if (alert) {
       const pricePerMeter =
