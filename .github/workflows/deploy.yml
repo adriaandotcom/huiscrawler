@@ -40,7 +40,7 @@ jobs:
           context: ./
           file: ./Dockerfile
           push: ${{ github.ref == 'refs/heads/main' }}
-          tags: ghcr.io/adriaanvanrossum/huiscrawler:latest
+          tags: ghcr.io/adriaandotcom/huiscrawler:latest
           cache-from: type=gha
           cache-to: type=gha,mode=max
           build-args: |
