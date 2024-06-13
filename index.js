@@ -169,9 +169,7 @@ async function processResult(db, result, config, fetchFunction) {
     // Check if the zipcode is in your list
     let zipRating = getZipcodeRating(property.zipcode);
 
-    const useAi =
-      config.getAIProperties &&
-      (!property.zipcode || zipRating || NODE_ENV === "development");
+    const useAi = typeof config.getAIProperties === "function";
 
     let ai;
 
