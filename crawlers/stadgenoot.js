@@ -1,5 +1,6 @@
 const cheerio = require("cheerio");
 const { parseProperties } = require("../lib/chatgpt");
+const { parsePrice } = require("../lib/helpers");
 
 module.exports = {
   platform: "stadgenoot",
@@ -27,7 +28,7 @@ module.exports = {
           street: property.title,
           zipcode: property.zipCode,
           meters: property.area,
-          price: property.price,
+          price: parsePrice(property.price),
         });
     }
 

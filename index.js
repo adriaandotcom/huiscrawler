@@ -169,7 +169,9 @@ async function processResult(db, result, config, fetchFunction) {
     // Check if the zipcode is in your list
     let zipRating = getZipcodeRating(property.zipcode);
 
-    const useAi = typeof config.getAIProperties === "function";
+    const useAi =
+      typeof config.getAIProperties === "function" &&
+      (!property.zipcode || zipRating || NODE_ENV === "development");
 
     let ai;
 
@@ -229,15 +231,16 @@ async function processResult(db, result, config, fetchFunction) {
         ? 8
         : floor === 0 || ai?.garden
         ? 5
-        : 0;
+        : 2;
 
     const alert =
-      floorScore &&
-      zipRating &&
-      (!size || size >= 60) &&
-      (!price || (price >= 300_000 && price <= 500_000));
+      zipRating !== false &&
+      (!size || size >= 50) &&
+      (!price || (price >= 300_000 && price <= 650_000));
 
-    if (alert) {
+    console.log({ alert, floorScore, zipRating, size, price });
+
+    if (alert && typeof zipRating === "number") {
       const pricePerMeter =
         price && size ? `€${Math.round(price / size)}/m2` : null;
 
