@@ -28,11 +28,18 @@ module.exports = {
     const html = await page.text();
     const $ = cheerio.load(html);
 
+    const sold =
+      $('dt:contains("Status")').next("dd").text().trim().toLowerCase() ===
+      "verkocht";
+
     const content = [
       $('section[id="informatie"]')?.text()?.trim(),
       $('section[id="kenmerken"]')?.text()?.trim(),
     ];
 
-    return parseProperties(content);
+    const json = await parseProperties(content);
+    if (sold) json.sold = true;
+
+    return json;
   },
 };

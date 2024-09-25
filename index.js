@@ -151,6 +151,7 @@ async function processResult(db, result, config, fetchFunction) {
         config.enrichCallback ||
         async function (result) {
           if (result.zipcode) return result;
+          if (!result.street) return result;
 
           const address = `${result.street}, ${
             result.city || result._city
@@ -184,6 +185,7 @@ async function processResult(db, result, config, fetchFunction) {
     const useFloor = property.floor || ai?.floor;
     const price = property.price || ai?.price;
     const size = property.meters || ai?.size;
+    const sold = property.sold ?? ai?.sold ?? false;
 
     // Get apendix of property.street, like --3 should return 3, -H should return H, etc.
     const street = property.street || ai?.street;
@@ -234,11 +236,13 @@ async function processResult(db, result, config, fetchFunction) {
         : 2;
 
     const alert =
+      !sold &&
       zipRating !== false &&
-      (!size || size >= 50) &&
-      (!price || (price >= 300_000 && price <= 650_000));
+      size >= 49 &&
+      price >= 300_000 &&
+      price <= 650_000;
 
-    console.log({ alert, floorScore, zipRating, size, price });
+    console.log({ sold, alert, floorScore, zipRating, size, price });
 
     if (alert && typeof zipRating === "number") {
       const pricePerMeter =
