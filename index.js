@@ -125,7 +125,7 @@ const getZipcodeRating = (zipcode) => {
   const found = zipcodes.find((z) => z.code === parseInt(zipcode));
 
   if (!found) return false;
-  return found.likebility;
+  return found.likebility ?? 10;
 };
 
 async function processResult(db, result, config, fetchFunction) {
@@ -183,9 +183,41 @@ async function processResult(db, result, config, fetchFunction) {
     }
 
     const useFloor = property.floor || ai?.floor;
-    const price = property.price || ai?.price;
-    const size = property.meters || ai?.size;
     const sold = property.sold ?? ai?.sold ?? false;
+    const rawPrice = property.price ?? ai?.price ?? null;
+    const rawSize = property.meters ?? ai?.size ?? null;
+
+    const parsedPrice =
+      typeof rawPrice === "number"
+        ? rawPrice
+        : typeof rawPrice === "string"
+        ? parseInt(rawPrice.replace(/\D/g, ""), 10)
+        : null;
+    const price = Number.isFinite(parsedPrice) ? parsedPrice : null;
+
+    const sizeMatch =
+      typeof rawSize === "string"
+        ? rawSize.replace(/,/g, ".").match(/[0-9]+(?:\.[0-9]+)?/)
+        : null;
+    const parsedSize =
+      typeof rawSize === "number"
+        ? rawSize
+        : sizeMatch
+        ? parseFloat(sizeMatch[0])
+        : null;
+    const size = Number.isFinite(parsedSize) ? parsedSize : null;
+    const gardenValue = property.garden ?? ai?.garden;
+    const rooftarraceValue = property.rooftarrace ?? ai?.rooftarrace;
+
+    const hasGarden =
+      typeof gardenValue === "string"
+        ? gardenValue.toLowerCase() === "true"
+        : Boolean(gardenValue);
+
+    const hasRooftarrace =
+      typeof rooftarraceValue === "string"
+        ? rooftarraceValue.toLowerCase() === "true"
+        : Boolean(rooftarraceValue);
 
     // Get apendix of property.street, like --3 should return 3, -H should return H, etc.
     const street = property.street || ai?.street;
@@ -212,6 +244,17 @@ async function processResult(db, result, config, fetchFunction) {
         ? appendix.length
         : null;
 
+    const meetsFloorRequirement =
+      floor === null || floor === undefined || Number.isNaN(floor)
+        ? true
+        : floor === 0;
+
+    const meetsSizeRequirement = typeof size === "number" && size >= 125;
+    const meetsPriceRequirement =
+      typeof price === "number" &&
+      price >= 900_000 &&
+      price <= 1_700_000;
+
     if (!property.zipcode && ai?.zipcode)
       zipRating = getZipcodeRating(ai.zipcode);
 
@@ -227,37 +270,78 @@ async function processResult(db, result, config, fetchFunction) {
         : zipcode.toUpperCase().trim();
 
     const floorScore =
-      floor === 0 && ai?.garden
+      hasGarden && floor === 0
         ? 10
-        : ai?.rooftarrace
+        : floor === 0
         ? 8
-        : floor === 0 || ai?.garden
-        ? 5
+        : hasGarden
+        ? 6
+        : hasRooftarrace
+        ? 4
         : 2;
 
     const alert =
       !sold &&
       zipRating !== false &&
-      size >= 49 &&
-      price >= 300_000 &&
-      price <= 650_000;
+      meetsSizeRequirement &&
+      meetsPriceRequirement &&
+      hasGarden &&
+      meetsFloorRequirement;
 
-    console.log({ sold, alert, floorScore, zipRating, size, price });
+    console.log({
+      sold,
+      alert,
+      floorScore,
+      zipRating,
+      size,
+      price,
+      hasGarden,
+      floor,
+      meetsFloorRequirement,
+      meetsSizeRequirement,
+      meetsPriceRequirement,
+    });
 
     if (alert && typeof zipRating === "number") {
       const pricePerMeter =
         price && size ? `€${Math.round(price / size)}/m2` : null;
 
-      const sizeScore = size >= 80 ? 10 : size >= 70 ? 8 : size >= 60 ? 5 : 0;
+      const sizeScore =
+        size >= 175
+          ? 10
+          : size >= 160
+          ? 9
+          : size >= 150
+          ? 8
+          : size >= 140
+          ? 6
+          : size >= 130
+          ? 5
+          : size >= 125
+          ? 4
+          : 0;
 
       const priceScore =
-        price <= 400000 ? 10 : price <= 500000 ? 8 : price <= 600000 ? 4 : 0;
+        price <= 1_100_000
+          ? 10
+          : price <= 1_300_000
+          ? 8
+          : price <= 1_500_000
+          ? 5
+          : price <= 1_700_000
+          ? 3
+          : 0;
 
       const emojiScore = Math.round(
         (zipRating + floorScore * 3 + sizeScore + priceScore) / 6
       );
 
-      const superalert = emojiScore >= 7 && zipRating >= 7 && sizeScore >= 8;
+      const superalert =
+        emojiScore >= 7 &&
+        zipRating >= 7 &&
+        sizeScore >= 8 &&
+        hasGarden &&
+        meetsFloorRequirement;
 
       const line = [
         emojiScore ? `${emoji(emojiScore)} ${emojiScore}/10` : null,
@@ -265,8 +349,13 @@ async function processResult(db, result, config, fetchFunction) {
         price ? `€${Math.round(price / 1000)}k` : "",
         size ? `${size}m2` : "",
         pricePerMeter,
+        hasGarden ? "🌿 tuin" : null,
         street,
-        typeof floor === "number" ? `🛗 ${floor}` : null,
+        floor === 0
+          ? "🏠 begane grond"
+          : typeof floor === "number"
+          ? `🛗 ${floor}`
+          : null,
         ai?.rooms ? `🛏 ${ai.rooms}` : null,
         ai?.servicecosts ? `🧾 €${ai.servicecosts} p/m` : null,
       ]
@@ -305,8 +394,8 @@ async function processResult(db, result, config, fetchFunction) {
       zipcode,
       size || null,
       price || null,
-      ai?.garden || null,
-      ai?.rooftarrace || null,
+      hasGarden || null,
+      hasRooftarrace || null,
       ai?.year || null,
       property.rooms || ai?.rooms || null,
       ai?.servicecosts || null,
